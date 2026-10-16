@@ -15,4 +15,6 @@ HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 gh auth statu
 HTTPS_PROXY=http://127.0.0.1:7890 HTTP_PROXY=http://127.0.0.1:7890 git push
 ```
 
-These variables apply only to the command. No credential or token belongs in the repository. The repository is private; user-initiated public release can happen later.
+These variables apply only to the command. On the final upload, direct connectivity had recovered while the proxy rejected the larger Git upload with HTTP 400/408. This checkout therefore overrides the old global proxy locally (`git config --local http.proxy ''`, likewise for `https.proxy`) and uses a 64 MiB HTTP post buffer. Other repositories and the global proxy configuration are unchanged. If network routing changes again, check both routes before changing these settings.
+
+No credential or token belongs in the repository. The repository is private; user-initiated public release can happen later.
