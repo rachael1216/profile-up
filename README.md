@@ -23,11 +23,15 @@ Profile Up 是个人学术网站与简历制作工作室。内容编辑服务于
 
 需要 Node.js 22 或更新版本，以及 npm。
 
+**本机再次打开：**双击项目文件夹里的 `启动 Profile Up.command`，或在项目目录运行 `npm run local:start`。启动器会检查并复用已有服务；服务在后台运行，关闭启动窗口后仍可访问。电脑重启后需要再次启动。
+
+`http://127.0.0.1:5173/` 是本机地址，依赖本地服务运行；GitHub 仓库用于保存代码，目前没有线上演示地址。浏览器若显示 `ERR_CONNECTION_REFUSED`，请先使用启动器恢复服务。日志位于 `.local/preview.log`。
+
 ```bash
 git clone https://github.com/rachael1216/profile-up.git
 cd profile-up
 npm ci
-npm run dev
+npm run local:start
 ```
 
 打开 `http://127.0.0.1:5173/`。浏览器草稿属于该 origin；换浏览器或端口前请下载 JSON 备份。
