@@ -1,0 +1,51 @@
+{
+  "upstreamReleaseManifest": "manifest.json",
+  "sdkCommit": "ba65fe20ae1fed88d2cde6e6afb6a3235f55ac9e",
+  "files": [
+    {
+      "name": "wasmtex-dvipdfm.js",
+      "bytes": 86724,
+      "sha256": "5ef4528725ab2475a9a00d4eabe7b216d5637e2620bcaae494b91503056c5312"
+    },
+    {
+      "name": "wasmtex-dvipdfm.wasm",
+      "bytes": 834432,
+      "sha256": "5816fae0ba78a5827f3b2f48a7b233e15feda5695baf6b8fbae16fe159a6e38c"
+    },
+    {
+      "name": "wasmtex-dvipdfm.worker.js",
+      "bytes": 20023,
+      "sha256": "035da82f748a8dc86ce216c47de41e8521412806a27dbf7fb214f5d09b313e7a"
+    },
+    {
+      "name": "wasmtex-kpse-resolve.js",
+      "bytes": 3223,
+      "sha256": "0303650d65055961498677e0e109357b061873b86a063cb901800a2a84b4859d"
+    },
+    {
+      "name": "wasmtex-xetex-resolver-evidence.js",
+      "bytes": 589,
+      "sha256": "f42ab09591de3108ac07635f060cc1fca27571f62a852edf5e6307515b83b728"
+    },
+    {
+      "name": "wasmtex-xetex.fmt.gz",
+      "bytes": 3903130,
+      "sha256": "258e48b659a8bff856137085635995395a837463031f01699b6c98d19f25e360"
+    },
+    {
+      "name": "wasmtex-xetex.js",
+      "bytes": 109067,
+      "sha256": "c6ba5ab3d691cfb12751a9874e9638bcae4334ff0ec7be85c58a9b6ad8794ada"
+    },
+    {
+      "name": "wasmtex-xetex.wasm",
+      "bytes": 3412772,
+      "sha256": "14f0518a2c2447ee1e25d10572c9ca96134e75e65ea575e516c70cb01d5f6da4"
+    },
+    {
+      "name": "wasmtex-xetex.worker.js",
+      "bytes": 18855,
+      "sha256": "16594f9f31723ee2b3a6b592a695f5effdc51475df9e6fb503b539051ef77acc"
+    }
+  ]
+}

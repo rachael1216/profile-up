@@ -1,0 +1,177 @@
+# Compile performance
+
+This guide describes adopted behavior and remaining limits. Exact commands,
+build revisions and measurements belong to the [experiment history](history/README.md).
+All engine changes follow the [optimization policy](engine-optimization-policy.md);
+[the upgrade inventory](engine-upgrade-customizations.md) maps maintained changes
+to their source files and requalification requirements.
+
+## Adopted behavior
+
+| Area | Current implementation | Boundary / cost |
+| --- | --- | --- |
+| Unicode initial memory | XeTeX and LuaHBTeX start at 128 MiB with growth enabled. | This is initial WASM memory, not browser RSS or a maximum document budget. |
+| Unicode/converter heap growth | XeTeX, LuaHBTeX and dvipdfmx use 5% growth headroom capped at 16 MiB; dvipdfmx starts at 64 MiB. | Stack sizes, growable maximums and TeX capacities are unchanged. Grown memory does not shrink on reset. |
+| Initial heap snapshots | pdfTeX trims the zero suffix; XeTeX, LuaHBTeX and dvipdfmx pack occupied page prefixes and clear omitted gaps. | Preserves the original reset extent; distinct from resumable checkpoints. |
+| Unicode warmup lifetime | SDK-owned prepared/durable sets survive only until all initialized workers receive them; caller-provided sets remain reusable. | Frees duplicate originals while preserving worker caches and reinitialization inputs. |
+| Unicode cache export | XeTeX/dvipdfmx on both annual lines and 2026 LuaHBTeX transfer the independent MEMFS read result without a second byte copy. | Reduces transient copy allocation; 2025 Lua retains its published controller after repeated initialization increases. Does not shrink WASM or evict cached files. |
+| Warmup | All three engine families accept supplied warmup data; hosts can merge profile-matched learned dependency sets. | Preparation costs time/network/memory; filesystem preloading must preserve lookup behavior. |
+| Conversion evidence | dvipdfmx reports bounded successful file opens, including native-cache hits. | Adds observations; XeLaTeX dependency completeness remains false. |
+| dvipdfmx font maps | Auxiliary lookup index and cached list tails preserve original ownership and iteration. | Includes the separately qualified missing-SFD lifetime fix; no cross-document font-object cache. |
+| pdfTeX / XeTeX format loading | Bounded byte-verified decoded-format read cache with original O2 flags and published fmt bytes. | One source, at most 8 MiB compressed / 32 MiB decoded / 65,536 chunks; lifecycle and fallback checks required. |
+| LuaHBTeX build | O3 + LTO on the pinned toolchain. | Larger compressed assets; no decoded-format cache. |
+| pdfTeX incremental path | Preamble formats, optional durable preamble cache and browser heap checkpoints. | Each has a distinct identity/lifetime; see [engine caches](engine.md#preamble-snapshots). |
+| Plain pdfTeX working capacity | The authored controller starts without extra main-memory allowances and promotes once on main-memory exhaustion. | Working-directory rollback preserves inputs/outputs; snapshots add transient copies. INITEX and checkpoint paths retain the original capacity. Immutable release/adoption qualification is separate from the [screening record](history/compact-capacity-2026-10.md). |
+
+The September 2026 controlled corpus measured repeat/body improvements around
+19% for ordinary PDF format reuse, 13–15% for checkpoint PDF, 13% for XeTeX,
+and 10–11% for Lua LTO. These are separate comparisons, not additive speedups or
+production percentiles. The measured fresh-browser aggregate peak RSS increase
+was approximately 17–50 MiB; Lua's gzip-9 JS/WASM size increased 327–383 KB.
+See the [final experiment qualification](history/compile-performance-2026-09.md#costs-and-release-qualification)
+for per-year inputs, memory methodology and exact results.
+
+The released pdfTeX controller also omits the initialization snapshot's zero
+suffix. The [October memory experiment](history/heap-memory-2026-10.md) measured
+64 MiB → approximately 0.95 MiB retained by that copy, with similar initialization
+and slightly lower repeat/edit times in a small browser probe. WASM capacity is
+unchanged. Separate release runs sampled aggregate browser peak RSS of
+941 → 869 MiB for pdfLaTeX; these are corpus observations, not memory budgets.
+
+The released Unicode controllers use a shared sparse initialization snapshot,
+omitting internal zero gaps as well. XeTeX also releases the fetched ICU JS
+buffer once its C copy is registered and captured. The same October record
+measured combined XeTeX/converter snapshot storage of 95.60 → 28.58 MiB, plus
+27.24 MiB of released ICU bytes; LuaHBTeX storage was 37.46 → 1.81 MiB.
+Separate browser runs sampled aggregate peak RSS of 1,236 → 1,144 MiB for
+XeLaTeX and 787 → 751 MiB for LuaLaTeX. These are small-corpus observations,
+not private-memory budgets. The record owns annual feature comparisons,
+timing variability and qualification limits. These
+changes preserve memory-growth/reset rules and the published format bytes.
+
+The [Unicode heap-growth qualification](history/heap-growth-2026-10.md)
+reduces combined XeTeX/converter capacity in the small document from 752.25 to
+508.81 MiB on both annual lines. Separate isolated-runner probes sample aggregate
+Unicode browser peak RSS approximately 179–195 MiB lower. Lua retains less
+capacity after preamble fonts, but its standalone physical peak reduction is
+not established and one image first-compile capacity increases. Opposite-order
+repeats found no reproducible compile slowdown in the measured corpus; this
+does not establish identical initialization latency or a browser memory budget.
+
+The [cache memory record](history/cache-memory-2026-10.md) separates retained warmup
+originals from transient dump allocations and records the rejected delta-save,
+auxiliary-snapshot and checkpoint-sharing implementations.
+
+## Continuous page-prefix preview
+
+The [October qualification record](history/page-preview-2026-10.md) records
+the annual releases, preserved outputs, Chromium/WebKit checks and measured
+costs of this path.
+
+The explicit `previewPages()` API adds a disposable first-pass preview without
+changing ordinary full compilation. Existing secondary TeX sources can use it
+only when a retained checkpoint proves the changed file was unread. Preamble
+reads participate in that proof; new files and unsupported workers fall back. It stops after complete page shipment,
+retains PDF/font finalization, restores working files and leaves canonical
+metadata with the last full result. Hosts reconcile after input settles.
+[The engine contract](engine.md#disposable-page-prefix-previews) records the
+state and memory boundary. This is a separate preview feature, not permission
+to export incomplete documents or change published formats.
+
+The pdfTeX controller grows from 82,668 to 84,993 bytes (gzip-9: 22,402 to
+22,866 bytes). Both annual controller ceilings are 86,000 bytes to accommodate the
+new command, filesystem rollback and capability handshake. Other artifact and
+runtime ceilings are unchanged. Native code is built from the existing upstream
+pins and reuses the exact published formats. Annual release and application
+qualification remain separate from the SDK unit tests.
+
+## Checkpoints in compact source
+
+On capable pdfTeX workers, sources without an earlier blank paragraph separator
+use the previous source line for checkpoint placement. Existing paragraph
+placement and prefix/dependency invalidation remain unchanged. Older workers
+retain the previous policy through an explicit capability handshake.
+
+The Asyncify buffer is reserved before the initial allocator snapshot and its
+free wrapper resolves the generated lazy export first. Both rules are necessary
+for repeated full resets followed by checkpoint reuse. The regression corpus
+covers unfinished macro arguments, repeated previews, full output and prefix
+invalidation. [Engine memory ownership](engine.md#heap-checkpoint-allocation)
+explains the lifetime boundary.
+
+A checkpoint hit alone does not establish a short rerun. Measure its distance
+from the edit and actual engine time. Preparation still costs a compile and a
+snapshot; a later checkpoint can retain more memory. One long source line cannot
+benefit from finer placement, and moving to an unprepared region still requires
+preparation. Hosts own idle scheduling and their checkpoint memory budget.
+
+## TikZ discovery checkpoints
+
+Externalized documents can reuse a browser heap checkpoint for the figure-list
+and MD5 discovery pass when its prefix has not read a figure PDF, baseline or
+other untracked project resource. The last successful TeX-source prefix and its
+recorded text inputs must still match. Generated auxiliary files retain the
+existing reference reconciliation contract; project-owned auxiliary and format
+inputs and dot-prefixed project sources refuse this path. Workers that explicitly
+report complete checkpoint inputs include preamble-format recorder reads and keep
+the live recorder for finalization. An existing secondary `.tex` edit retains only
+checkpoints taken before that file was read; additions and other resources retire
+them. Older workers without this evidence retain conservative invalidation.
+A full main pass always follows a discovery resume,
+even for text-only edits, preserving complete dependency and canonical output
+state. Page-prefix previews and head/tail splicing remain excluded for TikZ.
+
+Figure caches and idle worker policies belong to one selected engine. A switch
+disposes the old sibling pool. Worker retention itself is a host policy: short
+retention avoids repeating initialization and preamble work during picture edits,
+while immediate release minimizes idle engine memory.
+
+## Excluded or deferred changes
+
+| Candidate | Decision |
+| --- | --- |
+| Unicode filesystem injection intended to accelerate startup | Withdrawn after changing file-existence/alias behavior. HTTP/SW preparation is a separate host concern. |
+| pdfTeX LTO | Rejected after a project-switch / embedded-PDF memory-access failure. Keep the [complete regression sequence](../test/fixtures/project-switch-images/README.md). |
+| Ordinary O3 alone, XeTeX LTO, Lua format cache | Insufficient whole-compile benefit in #140. |
+| SDK transfer / MEMFS ownership | Actual SDK-to-worker experiment missed the 5% pipeline threshold; existing paths retained. |
+| pdfTeX AVL single-probe insertion | Rejected; see the [experiment decision](pdftex-fontmap-experiment.md). |
+| Extra compressed assets | Deferred after insufficient additional savings; see [HTTP compression](http-compression.md). |
+| Whole font-object sharing; XeTeX checkpoint resume | Not adopted. State completeness and benefit remain unproven. |
+| Skipping intermediate XeTeX PDF conversion | Not adopted because error/diagnostic semantics must be preserved across reruns. |
+
+An issue being open does not establish that its original proposal is active or
+unimplemented: consult the latest decision and the build inputs before retrying.
+
+<a id="font-map-index-qualification"></a>
+The historical font-map qualification anchor is retained for release-audit links.
+Its original measurements and holds are in the
+archived [font-map record](history/compile-performance-2026-09.md#font-map-index-qualification).
+
+## Release and adoption
+
+The previous #140 releases are [2025-6d8b01c3a4570ad1](https://github.com/corca-ai/wasmtex/releases/tag/engine-2025-6d8b01c3a4570ad1)
+and [2026-52bd7d6287f2a826](https://github.com/corca-ai/wasmtex/releases/tag/engine-2026-52bd7d6287f2a826).
+The previous heap-memory releases are
+[2025-6d7baaeed54984d4](https://github.com/corca-ai/wasmtex/releases/tag/engine-2025-6d7baaeed54984d4)
+and [2026-b614b6f4378863d1](https://github.com/corca-ai/wasmtex/releases/tag/engine-2026-b614b6f4378863d1).
+The previous heap-growth releases are
+[2025-e53a1aea7b7ebc88](https://github.com/corca-ai/wasmtex/releases/tag/engine-2025-e53a1aea7b7ebc88)
+and [2026-6d5129f5cbe00164](https://github.com/corca-ai/wasmtex/releases/tag/engine-2026-6d5129f5cbe00164).
+The current cache-memory releases are
+[2025-18f28ec91eb80496](https://github.com/corca-ai/wasmtex/releases/tag/engine-2025-18f28ec91eb80496)
+and [2026-dce598a0b9a42e79](https://github.com/corca-ai/wasmtex/releases/tag/engine-2026-dce598a0b9a42e79).
+They retain the original format-generation provenance and immutable mirrors.
+`scripts/engine-release-components.json` owns the selected workflow runs;
+artifact manifests and receipts own the released file identities. Do not infer
+the current release from a historical benchmark's asset directory.
+
+CorTeX adopted these engines through
+[PR #1046](https://github.com/corca-ai/cortex/pull/1046), after both annual
+52-template corpora passed twice and application/CI/deployment checks passed.
+This is consumer qualification, not a WasmTex build dependency. The historical
+nested-XeTeX failure was fixed separately in the SDK; use the current
+[nested-output contract](nested-output.md) rather than accepting the old failure.
+
+For a new experiment, use the [CPU diagnostics and testing guide](engine-testing.md#engine-cpu-diagnostics),
+measure preparation and end-to-end latency separately, and complete
+[corresponding-source qualification](corresponding-source.md) before promotion.

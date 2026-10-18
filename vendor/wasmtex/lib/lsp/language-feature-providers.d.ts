@@ -1,0 +1,19 @@
+import { VirtualFS } from '../fs/virtual-fs.js';
+import { CompletionResolverRegistry } from './completion-registry.js';
+import { ProjectIndex } from './project-index.js';
+/**
+ * Monaco bindings for the editor-neutral language features in
+ * `language-features.ts`. Each provider reads the model text, calls the pure
+ * core, and converts the result to Monaco types.
+ */
+import * as monaco from 'monaco-editor';
+export declare function createSignatureHelpProvider(index?: ProjectIndex, registry?: CompletionResolverRegistry): monaco.languages.SignatureHelpProvider;
+export declare function createFoldingRangeProvider(): monaco.languages.FoldingRangeProvider;
+export declare function createDocumentHighlightProvider(index: ProjectIndex): monaco.languages.DocumentHighlightProvider;
+export declare function createInlayHintsProvider(index: ProjectIndex): monaco.languages.InlayHintsProvider;
+export declare function createLinkProvider(): monaco.languages.LinkProvider;
+export declare function createSemanticTokensProvider(): monaco.languages.DocumentSemanticTokensProvider;
+/** Code-action provider. Applies workspace edits through `onWorkspaceEdit` if provided. */
+export declare function createCodeActionProvider(index: ProjectIndex): monaco.languages.CodeActionProvider;
+export declare function createLinkedEditingRangeProvider(index: ProjectIndex, fs: VirtualFS): monaco.languages.LinkedEditingRangeProvider;
+export declare function createSelectionRangeProvider(index: ProjectIndex, fs: VirtualFS, registry?: CompletionResolverRegistry): monaco.languages.SelectionRangeProvider;

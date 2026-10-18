@@ -1,6 +1,6 @@
 {
   "name": "profile-up",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -15,7 +15,8 @@
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "db:local": "node scripts/migrate-local.mjs"
+    "db:local": "node scripts/migrate-local.mjs",
+    "verify:tex": "tsx scripts/verify-tex.mts"
   },
   "dependencies": {
     "clsx": "2.1.1",
@@ -28,7 +29,8 @@
     "zod": "3.25.76",
     "@pdf-lib/fontkit": "^1.1.1",
     "jszip": "^3.10.1",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "wasmtex": "file:vendor/wasmtex"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",

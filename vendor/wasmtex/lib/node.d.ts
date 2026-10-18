@@ -1,0 +1,12 @@
+/**
+ * `wasmtex/node` — the Node (server) entry. Runs the same headless engine off-browser
+ * via a `worker_threads` host adapter (#121, execution-model principle 1).
+ *
+ *   import { installNodeWorkerHost, WasmTexCompiler } from 'wasmtex/node'
+ *   installNodeWorkerHost({ publicDir, assetBaseUrl })
+ *   const c = new WasmTexCompiler({ engine: 'pdflatex', assetBaseUrl, texliveUrl, files })
+ *   await c.init(); const { pdf } = await c.compile()
+ */
+export { installNodeWorkerHost, type NodeWorkerHostInstallation, type NodeWorkerHostOptions, } from './engine/node-host.js';
+export { COMPLETION_SNAPSHOT_MAX_ESTIMATED_BYTES, COMPLETION_SNAPSHOT_SCHEMA_VERSION, WasmTexCompiler, type WasmTexCompilerOptions, } from './headless.js';
+export type { CompilePhaseTimings, CompileResult, CompilerRetentionStats, CompletionSnapshot, CompletionSnapshotCollection, CompletionSnapshotCommand, CompletionSnapshotEngine, CompletionSnapshotEvidence, CompletionSnapshotFieldName, CompletionSnapshotFields, CompletionSnapshotIdentity, CompletionSnapshotKey, CompletionSnapshotKeyFamily, CompletionSnapshotProfile, CompletionSnapshotResource, CompletionSnapshotState, CompletionSnapshotValue, DependencyManifest, DependencyManifestCoverage, DependencyManifestIncompleteReason, DependencyManifestSource, DependencyManifestStage, PdfPreviewParts, PreviewCompileResult, ResolverAttempt, ResolverAttemptOutcome, ResolverAttemptSource, ResolverEvidence, ResolverEvidenceReport, ResolverStage, } from './types.js';

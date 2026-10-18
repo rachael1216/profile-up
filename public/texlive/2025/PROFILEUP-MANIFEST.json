@@ -1,0 +1,757 @@
+{
+  "schemaVersion": 1,
+  "upstreamMirror": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/",
+  "upstreamMetadataURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/catalog/2025-92e10d3241a312f0/texlive-provenance.json",
+  "upstreamMetadataSHA256": "dab0e066f136c0ae5292c523b38fe2512256e3a9308e54a4d38906cda904c28b",
+  "upstreamSourceArchives": {
+    "texmfArchive": {
+      "filename": "texlive-20250308-texmf.tar.xz",
+      "url": "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/texlive-20250308-texmf.tar.xz",
+      "sha512": "631a93f911437b9ebb075c09dfc592d6d8331ebaffb8cad62b6e7df55634345937342656db091dc0fb36686927131dbfdee5a03f54ef808a2a4d3ddc47cfbc17",
+      "verified": true
+    },
+    "metadataArchive": {
+      "filename": "texlive-20250308-extra.tar.xz",
+      "url": "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2025/texlive-20250308-extra.tar.xz",
+      "sha512": "a1320469be140c4c0b00a0e307a203114061087a51f6fbcff9c255a0a3ba9cb3abfccc6edb6ad1388e32072f532837ca055eeead131eccce56f785705a0c9035",
+      "verified": true
+    },
+    "tlpdb": {
+      "archiveMember": "texlive-20250308-extra/tlpkg/texlive.tlpdb",
+      "sha256": "ae3d202a8e2f8ce3b4e770db626d1d2707798ead8ebb713ad8e5aa14ede77fee"
+    }
+  },
+  "icu": {
+    "reconstructedBytes": 28566176,
+    "reconstructedSHA256": "d8e42c5c797e98f934a6a31e959231c2396ab68242f95d9e7b9f7783f71dc611",
+    "license": "/wasmtex/LICENSES/ICU-68.2.txt"
+  },
+  "files": [
+    {
+      "key": "icu-0.bin",
+      "bytes": 16000000,
+      "sha256": "ce98ed742a7a61852a09bb644f4e55631f9be8254d08d51c676f2a95ac948555",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/icudt68l.dat",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "icu-1.bin",
+      "bytes": 12566176,
+      "sha256": "38d66c879161648b1e5e2c0ccc830b69f35c3afa67c88b880c5c3c1283046419",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/icudt68l.dat",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/11/glyphlist.txt",
+      "bytes": 77146,
+      "sha256": "1d090feeb2cef487186d67f42d0b106bf09abf67e2cd94ab99e238d57c561d56",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/11/glyphlist.txt",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/11/pdfglyphlist.txt",
+      "bytes": 5117,
+      "sha256": "9d7bee92b7cfdaa6e03c7df895003145ed982be0bf6d1e78fdd5eb71bf4945aa",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/11/pdfglyphlist.txt",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/11/pdftex.map",
+      "bytes": 5466553,
+      "sha256": "0f048982581b8b1987603aeb9e540dde12e90478bb994f122444aac69399bb11",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/11/pdftex.map",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/11/texglyphlist.txt",
+      "bytes": 10227,
+      "sha256": "4b11bf2dcd65b004ee2023c5392339aaf89429bef0d3ace13b7b098d108cd991",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/11/texglyphlist.txt",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/CJKfntef.sty",
+      "bytes": 12851,
+      "sha256": "d06dc529270d63296ae382551930b086aba07d654c089d882ec1b6db5689c658",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/cjk/texinput/CJKfntef.sty",
+        "package": "cjk",
+        "packageRevision": "60865",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/article.cls",
+      "bytes": 20144,
+      "sha256": "44171ebeb4bbfd734a0fff29351073a0b51ed7407cd09dbd7a4530c669d3f833",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/base/article.cls",
+        "package": "latex",
+        "packageRevision": "73643",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/atbegshi-ltx.sty",
+      "bytes": 2963,
+      "sha256": "27c4c97014158dbab3e6c5ddbdae9953ead40da7158e83a6d9aff571a6391577",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/base/atbegshi-ltx.sty",
+        "package": "latex",
+        "packageRevision": "73643",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/atbegshi.sty",
+      "bytes": 24708,
+      "sha256": "a73003b4bb2dc8a814533ddbd31600e6626827799c2a465d03ef42e7a33fa71b",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/atbegshi/atbegshi.sty",
+        "package": "atbegshi",
+        "packageRevision": "53051",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/atveryend-ltx.sty",
+      "bytes": 2378,
+      "sha256": "848443ae8cd053c59629e5869d39edad1957ffa6ebc7901b4d3cccb3b7f7de6a",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/base/atveryend-ltx.sty",
+        "package": "latex",
+        "packageRevision": "73643",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/atveryend.sty",
+      "bytes": 1695,
+      "sha256": "2e84f857c2b0aa670d1d11588b14740bfed4a9f3dd816997e5da3372874e9eaa",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/atveryend/atveryend.sty",
+        "package": "atveryend",
+        "packageRevision": "72507",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/bigintcalc.sty",
+      "bytes": 40635,
+      "sha256": "050f2ad3a3671a1f4f9bcf97784836301bc751507e7ada546632379406aea103",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/bigintcalc/bigintcalc.sty",
+        "package": "bigintcalc",
+        "packageRevision": "53172",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/bitset.sty",
+      "bytes": 33961,
+      "sha256": "af5c7196c69dc9d28225189169b60c9b9039125bc1756c04d54886f0a3e1891e",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/bitset/bitset.sty",
+        "package": "bitset",
+        "packageRevision": "53837",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/color.cfg",
+      "bytes": 1213,
+      "sha256": "a3529ccdadc8248b4c5d7c34ceea53bdc1509b54f18a192ad51b924bd297d8df",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/color.cfg",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/color.sty",
+      "bytes": 7245,
+      "sha256": "3077f628d43032c971c41e475d73e586e1d7c2fa87c65aeb6933ef15e4de5c1f",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/graphics/color.sty",
+        "package": "graphics",
+        "packageRevision": "72739",
+        "catalogue": "latex-graphics"
+      }
+    },
+    {
+      "key": "pdftex/26/ctexhook.sty",
+      "bytes": 6505,
+      "sha256": "40e83f5ed34900870bb14fbe09dc24440bb98bc01813e28c59575c69134ffae6",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/ctex/ctexhook.sty",
+        "package": "ctex",
+        "packageRevision": "71527",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/etoolbox.sty",
+      "bytes": 46850,
+      "sha256": "23e5277f81dc963963081c91b1f674055914bd2ab1b479c522ed3e747fa9d10e",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+        "package": "etoolbox",
+        "packageRevision": "73881",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/expl3.sty",
+      "bytes": 6565,
+      "sha256": "1841b4d9b33cfd2826939618eb53739cd9360dbef9b7b0e51008e74a2815fa98",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/l3kernel/expl3.sty",
+        "package": "l3kernel",
+        "packageRevision": "73651",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/fontenc.sty",
+      "bytes": 5275,
+      "sha256": "f8b9641d944c90852c6721e2c0fa5991cf7b483141acd1e556088ba55de19bd8",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/base/fontenc.sty",
+        "package": "latex",
+        "packageRevision": "73643",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/fontspec-xetex.sty",
+      "bytes": 164981,
+      "sha256": "1e1767af309b7f162c072bd304a30574b42169e324308417ed1e43b4ef70d460",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/fontspec/fontspec-xetex.sty",
+        "package": "fontspec",
+        "packageRevision": "71237",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/fontspec.cfg",
+      "bytes": 549,
+      "sha256": "f31d038ca5322ef4fc3fbe391f42695bf1305567a04b6ac1005964703dd1232a",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/fontspec.cfg",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/fontspec.sty",
+      "bytes": 3755,
+      "sha256": "6aba297fb68d994b2a92644e0391e99c9bd95645680282c72dce3ad164b22ed0",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/fontspec/fontspec.sty",
+        "package": "fontspec",
+        "packageRevision": "71237",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/geometry.sty",
+      "bytes": 41601,
+      "sha256": "d5d36ad74051ad36288242b51438e2d9a5db2bd6c063b9b5704d0931fbc9f439",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/geometry/geometry.sty",
+        "package": "geometry",
+        "packageRevision": "61719",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/gettitlestring.sty",
+      "bytes": 8371,
+      "sha256": "26ab10fd43fd5a90f98bcbed3a99978808da8878eb73835db4e0346371aee41e",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/gettitlestring/gettitlestring.sty",
+        "package": "gettitlestring",
+        "packageRevision": "53170",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/graphics.cfg",
+      "bytes": 1224,
+      "sha256": "feb91e48789a21e4acced98e952c77a2e2cf4a77e01bf147b59fa56a1b3f2008",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/graphics.cfg",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/graphics.sty",
+      "bytes": 18363,
+      "sha256": "36f90e32faa7c4971823c90c1c8a522c7b6cacb54c9fbd5d3449b74bc4f6f076",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/graphics/graphics.sty",
+        "package": "graphics",
+        "packageRevision": "72739",
+        "catalogue": "latex-graphics"
+      }
+    },
+    {
+      "key": "pdftex/26/graphicx.sty",
+      "bytes": 8010,
+      "sha256": "054ee1ff8f09c98c43d4d7198ef167b0d42331e10e9d3f9668bec99280fd99c8",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/graphics/graphicx.sty",
+        "package": "graphics",
+        "packageRevision": "72739",
+        "catalogue": "latex-graphics"
+      }
+    },
+    {
+      "key": "pdftex/26/hxetex.def",
+      "bytes": 44461,
+      "sha256": "9096a9e4341e4f04467a51ba27636933e6908f6482d397268e2023064d6207a3",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/hxetex.def",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/hycolor.sty",
+      "bytes": 17914,
+      "sha256": "8acaa03eda19a8158780356701e905e354e1dc47dc736e6e26fc860c12a15e14",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/hycolor/hycolor.sty",
+        "package": "hycolor",
+        "packageRevision": "53584",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/hyperref.sty",
+      "bytes": 222112,
+      "sha256": "cc2605545116df536759dc2fba3ce8bbe9ae02d08ebf4789a970e1ec2ae3b082",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/hyperref/hyperref.sty",
+        "package": "hyperref",
+        "packageRevision": "72773",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/iftex.sty",
+      "bytes": 7984,
+      "sha256": "0dc0cefe2131f82330a3b8e62034c184455329d7d9bb94abe21e740821630381",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/iftex/iftex.sty",
+        "package": "iftex",
+        "packageRevision": "73115",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/ifvtex.sty",
+      "bytes": 1057,
+      "sha256": "1138730b9ad7d9f664b4760a4ea0ae0945afd21c006b76b67e623e863bbf3756",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/iftex/ifvtex.sty",
+        "package": "iftex",
+        "packageRevision": "73115",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/infwarerr.sty",
+      "bytes": 8356,
+      "sha256": "8c3e23b8bb7d940ff26cb0cf96e0151f540acf55020dc3c1aa8bcdb2eb66305c",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/infwarerr/infwarerr.sty",
+        "package": "infwarerr",
+        "packageRevision": "53023",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/intcalc.sty",
+      "bytes": 31769,
+      "sha256": "1343ba1b10b245bfd199c22947249af1d756808690c7811c90f07fe0a3772080",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/intcalc/intcalc.sty",
+        "package": "intcalc",
+        "packageRevision": "53168",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/keyval.sty",
+      "bytes": 2671,
+      "sha256": "011ba643109d799f8a475cbfc27618e160a998635df36f2def55f819342deda9",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/graphics/keyval.sty",
+        "package": "graphics",
+        "packageRevision": "72739",
+        "catalogue": "latex-graphics"
+      }
+    },
+    {
+      "key": "pdftex/26/kvdefinekeys.sty",
+      "bytes": 5412,
+      "sha256": "c42f0c2628dc5fbd95b535cf8cd3cc964347653c099d38c0d416f896d84e8240",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty",
+        "package": "kvdefinekeys",
+        "packageRevision": "53193",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/kvoptions.sty",
+      "bytes": 22555,
+      "sha256": "70595629ec990ba8c0b6e6a54afcff2603464e6fce380a54a98549a78d2fc74a",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/kvoptions/kvoptions.sty",
+        "package": "kvoptions",
+        "packageRevision": "63622",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/kvsetkeys.sty",
+      "bytes": 13815,
+      "sha256": "e3fcf7f3372a27bb478eb9488eca1e25ed382480d02a6898f190bd955388e055",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty",
+        "package": "kvsetkeys",
+        "packageRevision": "64632",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/l3backend-xetex.def",
+      "bytes": 31593,
+      "sha256": "2b3e4e8ddedd8c9277c906da40f3a7caff08c5d573f83d88052ecc493a77d99a",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/l3backend-xetex.def",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/ltxcmds.sty",
+      "bytes": 17865,
+      "sha256": "8fea89995d37ba4c69137186faafc589c470edcc5026d8a31aadbe5cef47dcb4",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/ltxcmds/ltxcmds.sty",
+        "package": "ltxcmds",
+        "packageRevision": "69032",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/mathcolor.ltx",
+      "bytes": 2885,
+      "sha256": "0804bb6e9e1eeeaeda861f29206d308194ea7cc846e38abaa344cdefa1d408cd",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/mathcolor.ltx",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/nameref.sty",
+      "bytes": 11026,
+      "sha256": "1bd958ef4ce46f3d15f7c77f6c2d084289e0e6d6017d5a3a341d83f0998b99a7",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/hyperref/nameref.sty",
+        "package": "hyperref",
+        "packageRevision": "72773",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/needspace.sty",
+      "bytes": 852,
+      "sha256": "5ae673ce2a80fb868c954373252294d9e6469feeb78b445182772fd043eb0914",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/needspace/needspace.sty",
+        "package": "needspace",
+        "packageRevision": "29601",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/pd1enc.def",
+      "bytes": 14249,
+      "sha256": "3b47a1e216203e0b112465081c6ea7e67511b3c3fcebf02643e1163d34aa231b",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/pd1enc.def",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/pdfescape.sty",
+      "bytes": 19007,
+      "sha256": "b3f0e56366c11b85dae521f9a48a6fd415dec1ce8c83152fde813a9f64445b49",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/pdfescape/pdfescape.sty",
+        "package": "pdfescape",
+        "packageRevision": "53082",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/pdftexcmds.sty",
+      "bytes": 20089,
+      "sha256": "2df7e0bd148c99d8097352b8ac9948dccf91d61ba360dcf43f82206933b6045b",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty",
+        "package": "pdftexcmds",
+        "packageRevision": "55777",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/puenc.def",
+      "bytes": 117112,
+      "sha256": "37a0c2c0243bd66a85893d804cbfb5b434c3f1478cdee588a898ca75c1059665",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/puenc.def",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/refcount.sty",
+      "bytes": 9878,
+      "sha256": "1bd5d42025520bef74f8808af99cf3f3be7d2e3774b9931bf85c11ba81bb6cab",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/refcount/refcount.sty",
+        "package": "refcount",
+        "packageRevision": "53164",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/rerunfilecheck.sty",
+      "bytes": 9714,
+      "sha256": "7e22b1ca949259c61d3721bca0a56bcccf7e47cfc776027c5863941635c07aa1",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty",
+        "package": "rerunfilecheck",
+        "packageRevision": "63869",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/size10.clo",
+      "bytes": 8448,
+      "sha256": "ae73585b23be32320e6dba47659ebc7300922fd87abdc50eb1eb81cf7faaac4e",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/size10.clo",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/size11.clo",
+      "bytes": 8464,
+      "sha256": "950a10f20ed0acf40eb01fd83c8f59c9b79f6022f4daae156248779217d1b492",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/size11.clo",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/size12.clo",
+      "bytes": 8449,
+      "sha256": "690c1b1684b0959d086201804e62c4758ad040f2c5e0401fe5e313707f7ec1da",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/size12.clo",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/stringenc.sty",
+      "bytes": 21514,
+      "sha256": "b134a7bba648a6987afc83ddfb6a3fcdad43bcae6b616e533eb484306d56ac45",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/stringenc/stringenc.sty",
+        "package": "stringenc",
+        "packageRevision": "52982",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/titlesec.sty",
+      "bytes": 48766,
+      "sha256": "82a440377f90231b37433ae1ab7d8b16479be7bc47f302064b53e85d70d59a39",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/titlesec/titlesec.sty",
+        "package": "titlesec",
+        "packageRevision": "73302",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/trig.sty",
+      "bytes": 4023,
+      "sha256": "6630b4fad51c0f1fbdc2d067622852c8014631ab4634fe8b49a2c228a4253005",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/graphics/trig.sty",
+        "package": "graphics",
+        "packageRevision": "72739",
+        "catalogue": "latex-graphics"
+      }
+    },
+    {
+      "key": "pdftex/26/uniquecounter.sty",
+      "bytes": 7008,
+      "sha256": "9d11c81501953d689787ff14c073d2f1eda5874068db9e882b8dbbf9a9d863b0",
+      "upstream": {
+        "path": "texmf-dist/tex/generic/uniquecounter/uniquecounter.sty",
+        "package": "uniquecounter",
+        "packageRevision": "53162",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/url.sty",
+      "bytes": 12796,
+      "sha256": "2373f56849ac606473e77053e5c1d14c92aba312b3f684e02a130eaf36f2de47",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/url/url.sty",
+        "package": "url",
+        "packageRevision": "32528",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/xcolor.sty",
+      "bytes": 55384,
+      "sha256": "478888f8e8f00345fd645b6cdd6fa7db1e9efdd6f585b25c89bb3665d9029295",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/xcolor/xcolor.sty",
+        "package": "xcolor",
+        "packageRevision": "72484",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/xeCJK.cfg",
+      "bytes": 408,
+      "sha256": "d4fd750245a9702da242938637ece678b37862da73d1cf7d15df931828482a5c",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/xeCJK.cfg",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/xeCJK.sty",
+      "bytes": 183137,
+      "sha256": "c61660692befbcec0b52dfb3e2e69b360cbd3e187e07565d722a296df8e893ef",
+      "upstream": {
+        "path": "texmf-dist/tex/xelatex/xecjk/xeCJK.sty",
+        "package": "xecjk",
+        "packageRevision": "64059",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/xeCJKfntef.sty",
+      "bytes": 39577,
+      "sha256": "3388a7a7d4c88c533d22cc6dbcb0e7b18b6bd1411376bfa5be6c3e5d6df9a35d",
+      "upstream": {
+        "path": "texmf-dist/tex/xelatex/xecjk/xeCJKfntef.sty",
+        "package": "xecjk",
+        "packageRevision": "64059",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/xetex.def",
+      "bytes": 14788,
+      "sha256": "41c25e424976a246eb523e4707b88f2b3361c0972a6a49a12ca8d8f676028d9a",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/xetex.def",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/xetexfontlist.txt",
+      "bytes": 1283002,
+      "sha256": "05acaa86e571f25c9a610ed58ffaa7c19a0d53f270287cbbbd74f6509fcd11fb",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/26/xetexfontlist.txt",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/26/xparse.sty",
+      "bytes": 9783,
+      "sha256": "5d83ee3681fb6be3ec03e459a861d7da3afec24dba9cdfcc5d6c8a80bc4e6f47",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/l3packages/xparse/xparse.sty",
+        "package": "l3packages",
+        "packageRevision": "72128",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/26/xtemplate.sty",
+      "bytes": 1308,
+      "sha256": "e3a1b141a9a44511c1e26781e05f6697129a60b09978de436aef81f68be82bb2",
+      "upstream": {
+        "path": "texmf-dist/tex/latex/l3packages/xtemplate/xtemplate.sty",
+        "package": "l3packages",
+        "packageRevision": "72128",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/3/cmr10",
+      "bytes": 1296,
+      "sha256": "87f2d8981927644cbecaf3d639e96e348ea4e7be49d8804468bd8ba9ff3f5244",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/3/cmr10",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/3/pzdr",
+      "bytes": 1528,
+      "sha256": "6b4254217851e285d1d5c6dfe677284396eeffc59f709ad775404b76dc99d513",
+      "upstream": {
+        "mirrorURL": "https://texlive.corca.ai/snapshots/2025-92e10d3241a312f0/2025/pdftex/3/pzdr",
+        "note": "Runtime support file; not covered by the upstream completion-metadata manifest."
+      }
+    },
+    {
+      "key": "pdftex/47/lmroman10-bold.otf",
+      "bytes": 111240,
+      "sha256": "102fe06c430a8b681b2bf6876b7cd967ae4d47b4b6b41d915eb7913b726d9fb1",
+      "upstream": {
+        "path": "texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf",
+        "package": "lm",
+        "packageRevision": "67718",
+        "catalogue": null
+      }
+    },
+    {
+      "key": "pdftex/47/lmroman10-regular.otf",
+      "bytes": 111536,
+      "sha256": "1aa18cfefa58132c52ce5de70db1fd1154201c19cd2b2cdaffba4906a33e6852",
+      "upstream": {
+        "path": "texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf",
+        "package": "lm",
+        "packageRevision": "67718",
+        "catalogue": null
+      }
+    }
+  ]
+}

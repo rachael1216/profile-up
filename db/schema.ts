@@ -1,3 +1,9 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 export const drafts = sqliteTable('drafts', { userId: text('user_id').primaryKey(), document: text('document_json').notNull(), revision: integer('revision').notNull().default(1), updatedAt: text('updated_at').notNull() });
 export const publishedSites = sqliteTable('published_sites', { slug: text('slug').primaryKey(), userId: text('user_id').notNull().unique(), document: text('document_json').notNull(), revision: integer('revision').notNull(), published: integer('published').notNull().default(1), updatedAt: text('updated_at').notNull() });
+
+// Version 0.4 adds per-account profiles without rewriting deployed legacy tables.
+export const accounts = sqliteTable('accounts', { id: text('id').primaryKey(), createdAt: text('created_at').notNull() });
+export const profiles = sqliteTable('profiles', { id: text('id').primaryKey(), ownerId: text('owner_id').notNull(), label: text('label').notNull(), document: text('document_json').notNull(), revision: integer('revision').notNull().default(1), createdAt: text('created_at').notNull(), updatedAt: text('updated_at').notNull() }, t=>[index('profiles_owner_created').on(t.ownerId,t.createdAt)]);
+export const profileSites = sqliteTable('profile_sites', { profileId: text('profile_id').primaryKey(), ownerId: text('owner_id').notNull(), slug: text('slug').notNull().unique(), document: text('document_json').notNull(), files: text('files_json').notNull().default('[]'), revision: integer('revision').notNull(), published: integer('published').notNull().default(1), updatedAt: text('updated_at').notNull() });
+export const profileFiles = sqliteTable('profile_files', { id: text('id').primaryKey(), profileId: text('profile_id').notNull(), ownerId: text('owner_id').notNull(), objectKey: text('object_key').notNull().unique(), name: text('name').notNull(), category: text('category').notNull(), size: integer('size').notNull(), createdAt: text('created_at').notNull() },t=>[index('files_owner').on(t.ownerId),index('files_profile').on(t.profileId)]);

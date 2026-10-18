@@ -1,0 +1,234 @@
+import { CachedTexliveFile, CompileResult, CompletionSnapshotProfile, TexliveFileEntry, TexliveVersion, WarmupCache } from '../types.js';
+import { BaseWorkerEngine } from './base-worker-engine.js';
+import { CompileEngine } from './compile-engine.js';
+import { EngineCompletionObservation } from './completion-snapshot.js';
+import { BinaryStore } from './persistent-cache.js';
+import { RawResolverEvidence } from './resolver-evidence.js';
+export interface WasmTexEngineOptions {
+    /** TeX Live version to use. Defaults to '2025'. */
+    texliveVersion?: TexliveVersion;
+    /** WASM binary to load. Defaults to 'pdftex'. 'xetex'/'luatex' select
+     *  the corresponding Unicode engine worker. */
+    engineBinary?: 'pdftex' | 'xetex' | 'luatex';
+    /** Base URL for WASM assets. Defaults to `import.meta.env.BASE_URL`. */
+    assetBaseUrl?: string;
+    /** Optional base for compatible published .fmt assets; workers keep assetBaseUrl. */
+    formatAssetBaseUrl?: string;
+    /** TexLive server endpoint. Defaults to `${location.origin}${BASE_URL}texlive/`. */
+    texliveUrl?: string;
+    /** Load the Asyncify engine build that can take resumable mid-run checkpoints (#81).
+     *  Roughly 20-30% slower per compile than the plain build, so hosts enable it only for
+     *  interactive incremental sessions. Browser workers only. */
+    heapCheckpoints?: boolean;
+    /** If true, do not attempt to preload the base .fmt file. */
+    skipFormatPreload?: boolean;
+    /** If true, disable precompiled preamble snapshots and always run a full
+     *  compile. An escape hatch for documents incompatible with preamble
+     *  precompilation. Defaults to false (snapshots enabled). */
+    disablePreambleSnapshot?: boolean;
+    /** Pre-fetched TeX Live files from `warmup()`. */
+    warmupCache?: WarmupCache;
+    /** Enable the built-in persistent (IndexedDB) cache of fetched TeX Live assets.
+     *  Rehydrates on init and auto-persists after compiles that fetched new files,
+     *  so return visits are near-instant and work offline. Silently no-ops where
+     *  IndexedDB is unavailable. Defaults to false. */
+    persistentCache?: boolean;
+    /** Persist document-specific pdfLaTeX preamble formats across worker sessions.
+     *  Requires an immutable `preambleCacheIdentity.mirrorRevision`. */
+    persistentPreambleCache?: boolean;
+    /** Immutable TeX Live mirror identity used to fail closed on cache reuse. */
+    preambleCacheIdentity?: {
+        mirrorRevision: string | null;
+    };
+    /** Test/integration injection point; browser hosts normally omit it. @internal */
+    preambleCacheStore?: BinaryStore;
+    /** Exact compile profile attached to host-local resolver evidence. */
+    resolverProfile?: CompletionSnapshotProfile;
+}
+/** Incoming response message from the WASM worker. */
+interface WorkerMessage {
+    result?: string;
+    status?: number;
+    cmd?: string;
+    msgId?: string;
+    file?: string;
+    log?: string;
+    pdf?: ArrayBuffer;
+    synctex?: ArrayBuffer;
+    format?: ArrayBuffer;
+    /** Checkpoint format + head PDF (incremental compile, #55). */
+    fmt?: ArrayBuffer;
+    headPdf?: ArrayBuffer;
+    data?: string;
+    preambleSnapshot?: boolean;
+    preambleRebuilt?: boolean;
+    phaseTimings?: unknown;
+    preambleFormat?: ArrayBuffer;
+    preambleHash?: string;
+    preambleInputFiles?: string[];
+    engineCommands?: string[];
+    engineCommandsComplete?: boolean;
+    engineCommandsDropped?: number;
+    inputFiles?: string[];
+    inputFilesComplete?: boolean;
+    semanticTrace?: string;
+    completionObservations?: string[];
+    files?: CachedTexliveFile[];
+    notFound?: TexliveFileEntry[];
+    evidence?: RawResolverEvidence;
+}
+/** Merge two warmup caches; `override` entries win on key collisions.
+ *  Exported for unit testing — the merge must keep `files` and `notFound`
+ *  disjoint (the worker resolves a 404 before a preloaded file). */
+export declare function mergeWarmupCaches(base: WarmupCache, override: WarmupCache): WarmupCache;
+export declare class WasmTexPdftexEngine extends BaseWorkerEngine<WorkerMessage> implements CompileEngine {
+    private readonly formatCacheIdentity;
+    private formatPath;
+    private skipFormatPreload;
+    private version;
+    private warmupCache;
+    private readonly warmupPositiveSources;
+    private readonly warmupNegativeSources;
+    private preambleSnapshotEnabled;
+    private persistentCacheEnabled;
+    private readonly assetBaseUrl;
+    private readonly effectiveTexliveUrl;
+    private readonly preambleMirrorRevision;
+    private preambleCache;
+    private engineBuildId;
+    private readonly projectFiles;
+    private loadedPreambleKey;
+    private attemptedPreambleKey;
+    private activePreambleDependencies;
+    private preamblePersistInFlight;
+    private durableCache;
+    private readonly persistentAssetOptions;
+    private bloomFilter;
+    /** Main file name, tracked for source-based dependency extraction. */
+    private mainFileName;
+    private heapCheckpointsSupported;
+    private lineCheckpointsSupported;
+    private pagePreviewSupported;
+    /** Last-written text sources, so dependency extraction can read the main source
+     *  synchronously (no worker round-trip). */
+    private readonly sources;
+    private completionObservation;
+    /** Download/persist watermark (drives auto-persist; single-flight guarded). */
+    private readonly persist;
+    private readonly resolver;
+    onFileDownload?: (filename: string) => void;
+    constructor(options?: WasmTexEngineOptions);
+    init(): Promise<void>;
+    private loadEngineBuildId;
+    /**
+     * Dispatch a worker message to the appropriate handler.
+     * Separated from init() to reduce cognitive complexity.
+     */
+    protected dispatchWorkerMessage(data: WorkerMessage, initResolve: () => void, initReject: (err: Error) => void): void;
+    private handleResolverMessage;
+    private preloadFormat;
+    /** Pre-load a texlive file into the worker's MEMFS cache. */
+    private preloadTexliveFile;
+    /** Inject pre-fetched warmup cache into the worker. */
+    protected injectWarmupCache(cache: WarmupCache): Promise<void>;
+    /** Fetch bloom filter from CDN and send it to the worker. */
+    private fetchAndSendBloomFilter;
+    /**
+     * Fetch a URL with optional download-progress tracking for the .fmt preload.
+     */
+    private fetchGzWithProgress;
+    mkdir(path: string): Promise<void>;
+    writeFile(path: string, content: string | Uint8Array): Promise<void>;
+    setMainFile(path: string): void;
+    /**
+     * Enable or disable precompiled preamble snapshots at runtime.
+     * When disabled, every compile re-runs the full preamble (no `.fmt` reuse).
+     */
+    setPreambleSnapshot(enabled: boolean): void;
+    /** Whether preamble snapshots are currently enabled. */
+    isPreambleSnapshotEnabled(): boolean;
+    flushCache(): Promise<void>;
+    /**
+     * Resolve the warmup set used to seed the worker: the durable cache (if
+     * enabled) rehydrated from a previous session, merged with any caller-provided
+     * `warmupCache`.
+     */
+    private resolveWarmupCache;
+    private recordWarmupSources;
+    /**
+     * Export the worker's in-memory TeX Live cache: every file fetched or
+     * preloaded this session (by `format/name`) plus the accumulated 404 set.
+     */
+    dumpTexliveCache(): Promise<WarmupCache>;
+    /** Persist the worker's current TeX Live cache to the durable store (if enabled). */
+    persistTexliveCache(): Promise<void>;
+    /** Number of files the worker has reported downloading on demand this session. */
+    getDownloadCount(): number;
+    /** Clear this mirror namespace and the separate durable preamble cache. */
+    clearCache(): Promise<void>;
+    private maybePersistCache;
+    /** Build and return the base pdflatex format with this exact engine binary.
+     *  Release tooling uses this instead of depending on an application-side event
+     *  or reaching into the worker protocol directly. */
+    buildFormat(): Promise<Uint8Array>;
+    /** Dense source placement requires a worker whose Asyncify allocation survives resets. */
+    get supportsLineCheckpoints(): boolean;
+    /** True once the worker reported the Asyncify build (see the `heapCheckpoints` option). */
+    get supportsHeapCheckpoints(): boolean;
+    /** Compile; on the checkpoint build, `checkpoints` asks the worker to keep a resumable
+     *  state before reading each listed main-file line (reported in `result.heapCheckpoints`). */
+    compile(options?: {
+        checkpoints?: Array<{
+            id: string;
+            line: number;
+        }>;
+    }): Promise<CompileResult>;
+    /** Resume a compile from a checkpoint taken earlier (#81): the worker restores that
+     *  state, reads the rest of the main file as the host last wrote it, and finishes the
+     *  run like a normal compile - a complete PDF and SyncTeX, no splicing. The caller
+     *  guarantees the checkpoint is still valid (unchanged bytes before its line, unchanged
+     *  inputs). Further `checkpoints` after the resume line can be taken on the way. */
+    compileFromHeapCheckpoint(id: string, checkpoints?: Array<{
+        id: string;
+        line: number;
+    }>): Promise<CompileResult>;
+    /** Disposable PDF prefix; auxiliary files are restored by the worker. */
+    compilePagePreview(pageLimit: number, checkpointId?: string): Promise<CompileResult | null>;
+    /** Free checkpoints in the worker (all when `ids` is omitted). */
+    dropHeapCheckpoints(ids?: string[]): Promise<void>;
+    private runCompile;
+    private validPhaseTimings;
+    private currentPreambleKey;
+    private restorePersistentPreamble;
+    private dependenciesMatch;
+    private persistPreambleSnapshot;
+    getCompletionObservation(): EngineCompletionObservation | null;
+    /**
+     * Build a mid-document checkpoint (#55): run `headText + \dump` in INITEX to capture
+     * the engine state at a page boundary as a bootable format, plus the head PDF (pages
+     * up to the boundary). `headText` MUST end at an existing page break (\clearpage etc.)
+     * and a full compile must have run first (seeds the labels via main.aux).
+     */
+    buildCheckpoint(headText: string): Promise<{
+        fmt: Uint8Array;
+        headPdf: Uint8Array | null;
+    }>;
+    /**
+     * Boot a checkpoint format and typeset only the tail (#55). Returns the tail PDF
+     * (the host splices it after the checkpoint's head PDF). The `fmt` buffer is copied
+     * before transfer so the caller can reuse it across many edits.
+     */
+    compileFromCheckpoint(fmt: Uint8Array, tailText: string): Promise<{
+        pdf: Uint8Array | null;
+        synctex: Uint8Array | null;
+        status: number;
+        log: string;
+    }>;
+    readFile(path: string): Promise<string | null>;
+    isReady(): boolean;
+    /** Guard for compile() — must be 'ready' (not already compiling) */
+    private checkReady;
+    /** Guard for writeFile/mkdir/setMainFile — worker must exist (ready or compiling) */
+    private checkInitialized;
+}
+export {};

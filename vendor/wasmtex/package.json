@@ -1,0 +1,16 @@
+{
+  "name": "wasmtex",
+  "version": "0.1.0-profileup-ba65fe2",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./headless": {
+      "types": "./lib/headless.d.ts",
+      "import": "./lib/headless.js"
+    },
+    "./node": {
+      "types": "./lib/node.d.ts",
+      "import": "./lib/node.js"
+    }
+  }
+}

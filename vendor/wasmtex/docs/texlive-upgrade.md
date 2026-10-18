@@ -1,0 +1,327 @@
+# TeX Live Internals & Upgrade
+
+This document explains the TeX Live system (the kpathsea fallback and CDN
+structure) and the steps required to upgrade to a new TeX Live year.
+
+An engine performance update is not an annual TeX Live upgrade. Follow the
+[engine optimization policy](engine-optimization-policy.md) to keep the existing
+mirror and format bytes and deliver the new engine to existing CorTeX projects
+without new TeX Live choices.
+
+Before changing the upstream pin, review the [engine customization inventory](engine-upgrade-customizations.md):
+it identifies the adopted patches/build flags, state assumptions, rejected
+variants, and per-change upgrade checks.
+
+## Supported annual lines
+
+TeX Live 2025 remains the compatibility default while TeX Live 2026 is supported
+side by side. Hosts select an exact profile and pass both its `texliveVersion` and
+mirror URL; engine assets, formats, cache namespaces, catalogs, and mirror bytes
+must all name the same year.
+
+The [2026 snapshot lifecycle](texlive-2026-snapshot-lifecycle.md) records the
+published initial/dated profiles and the post-2027 `tlnet-final` procedure.
+Machine consumers use `scripts/texlive-profiles-2026.json`; every entry names
+an immutable package mirror and its matching engine release.
+
+### 1. WASM Engine & File Lookup
+The WASM engine uses a customized `kpathsea` library. When the C code attempts to find a file (style, font, etc.), it follows this flow:
+1. **Local Check (MEMFS)**: It first looks in the Emscripten virtual filesystem (including the pre-loaded `/tex` cache).
+2. **JS Fallback**: If not found, a wrapper (`wasm-build/kpse-hook.c`) intercepts the call and triggers the JS fallback `kpse_find_file_js` (`wasm-build/library.js`), which calls into the authored worker controller (for pdfTeX, `wasm-build/pdftex-worker.js`). The fallback tries the bucket names kpathsea could mean (the request, its extension-stripped form, then each retry extension) but, once the bloom filter is loaded, only the names the filter cannot rule out — fonts are stored bare, so `ptmb7t.vf` is fetched as `33/ptmb7t` directly (`wasm-build/kpse-resolve.cjs`, `fetchCandidates`).
+3. **Synchronous XHR**: The JS worker performs a **synchronous XMLHttpRequest** to the TeX Live CDN. Synchronous calls are used because the C-side `kpathsea` lookup is blocking.
+
+### 2. Object-store/CDN package structure
+Packages are hosted in Cloudflare R2 and served through `texlive.corca.ai` in a
+flattened structure based on kpathsea format IDs:
+- `pdftex/26/`: TeX sources (`.sty`, `.cls`, `.tex`)
+- `pdftex/3/`: TFM font metrics
+- `pdftex/32/`: Type1 fonts (`.pfb`)
+- `pdftex/10/`: Format files (`.fmt`)
+- `pdftex/7/`: BibTeX styles (`.bst`)
+
+The URL pattern is `${texliveUrl}pdftex/${formatId}/${filename}` (the resolved
+`texliveUrl` always ends in `/` — `resolveTexliveUrl` in
+`src/engine/base-worker-engine.ts` normalizes it, so there is no double slash). The
+worker builds it as `self.texlive_endpoint + "pdftex/" + format + "/" + name` in
+`kpse_find_file_impl` (`wasm-build/pdftex-worker.js`).
+
+### 3. Format Files (.fmt)
+A `.fmt` file is a memory dump of the TeX state after loading a set of macros (like LaTeX).
+- **Base Format**: `public/wasmtex/<version>/wasmtex-pdftex.fmt` (e.g. `…/2025/wasmtex-pdftex.fmt`). This is the core LaTeX kernel.
+- **Preamble Caching**: For faster edits, the system snapshots the document preamble and builds a temporary `.fmt` file in the browser.
+
+---
+
+## Upstream maintenance: interpose, don't patch
+
+> **Prefer interposition to a maintained engine fork.** All three engines build
+> from pinned `TeX-Live/texlive-source`. Keep customizations alongside upstream
+> where practical. Small tracked internal patches are allowed under the
+> [engine optimization policy](engine-optimization-policy.md); preserve format
+> compatibility and output, and make patch drift fail at build time.
+
+The whole point of building from source with this project's **own glue** is to
+avoid a maintained fork. We **interpose** around upstream instead of editing it:
+
+| Customization | Mechanism | Where |
+|---|---|---|
+| CDN file lookup (sync XHR + bloom + warmup + dumpcache) | linker `-Wl,--wrap=kpse_find_file` | `wasm-build/kpse-hook.c` |
+| Worker protocol / JS runtime | authored `*.worker.js` controller + generated Emscripten module + `--js-library` bridge | `wasm-build/*-worker.js`, `wasm-build/*-library.js`, `wasm-build/library.js` |
+| Engine entry points (`compileLaTeX`/`compileFormat`) | added shim `.c`, not source edits | `wasm-build/{wasm,xetex,luatex,bibtex}-entry.c` |
+| Semantic trace | added shim `.c` | `wasm-build/trace-hook.c` |
+| 32-bit wasm fixup | `sed` on a **generated** config header | `wasm-build/Makefile` (`c-auto.h`) |
+
+The interfaces above use linker wraps, authored glue, entry shims, and generated
+header fixups. If an internal patch is necessary, keep it in the tracked build
+inputs rather than an independently maintained source tree. Data generators
+remain reproducible; a transparent optimization retains the published format
+and mirror data bytes instead of treating regeneration as a compatibility fix.
+
+### When a version bump actually costs work
+
+Interposition work is needed when an interface moves; build/smoke tests must
+point at the affected boundary:
+
+1. `kpse_find_file`'s signature (→ the `--wrap` hook) — very stable.
+2. `main()` / the cwrap'd entry symbols (→ the `*-entry.c` shims) — stable.
+3. The web2c codegen / `c-auto.h` layout (→ the Makefile fixup, two-phase build) — occasional.
+
+Internal patches add their own rebase and compatibility checks on an upstream
+upgrade. Keep those assumptions explicit and covered by tests.
+
+### Rules that keep it easy
+
+- **Interpose, don't patch.** Preference ladder: runtime/data → `configure` flags
+  → `--wrap`/glue/entry-shim → (last resort) a tracked `wasm-build/patches/*.patch`
+  applied at build time so it **fails loudly** when upstream drifts. Never a forked
+  source tree.
+- **Pin upstream to one immutable ref per annual line.**
+  `wasm-build/texlive-source-<year>.ref` holds an immutable `texlive-source` commit (not a
+  moving branch), passed as `--build-arg TEXLIVE_REF` to every engine build
+  (pdfTeX `Dockerfile`, LuaTeX `Dockerfile.luatex`, via `wasm-build.yml` /
+  `wasm-luatex.yml` / `build-luatex-fromsource.sh`). The Dockerfiles have no
+  default and fail loudly if it's unset. Bumping the TeX Live source = update that
+  one file (resolve a new commit with `git ls-remote …/texlive-source.git
+  refs/heads/branch<YEAR>`). XeTeX builds from the **same year-specific ref** /
+  `TEXLIVE_REF` (with this project's own controller and glue — see
+  `wasm-build/Dockerfile.xetex` and `scripts/build-xetex-fromsource.sh`); only ICU
+  data is built separately (`scripts/build-icu-data.sh`).
+- **Make drift fail loudly, not silently.** Interposition assumptions are
+  guarded at build + smoke time, so a moved interface is an obvious, located error:
+  - `wasm-build/Makefile` (`wasm-prep`) fails if the native `c-auto.h` is absent, if the
+    `#define SIZEOF_LONG 8` pattern the wasm32 fixup `sed` targets is gone (it would
+    otherwise no-op silently → a broken 64-bit-assuming wasm32 build), or if the post-sed
+    result is wrong.
+  - `wasm-build/Makefile` (`wasm-libs`) fails if `kpse_find_file` is not defined in
+    `libkpathsea.a`, since `-Wl,--wrap=kpse_find_file` would then silently no-op and the
+    CDN file-lookup hook (`kpse-hook.c`) would never fire.
+  - CI smoke tests (`wasm-build.yml`, `wasm-xetex.yml`, `wasm-luatex.yml`) assert the C
+    entry exports (`_compileLaTeX`/`_compileFormat`/`_setMainEntry`, plus `_compilePDF` for
+   dvipdfm) in each generated module, and the `kpse_find_file_impl` JS hook in each
+   separately published worker controller.
+- **Catch "builds but output changed" early.** `e2e/golden-output.spec.ts`
+  locks a small pdfLaTeX/XeLaTeX/LuaLaTeX corpus to a deterministic structural signature
+  (page count, telemetry diagnostic codes, XDV box/run geometry — never the
+  timestamp-bearing PDF bytes), run weekly by `.github/workflows/golden-canary.yml`.
+  Regenerate after an intentional change with `npm run update:golden`.
+- **Bump deliberately, not reflexively.** TeX Live is annual and assets are
+  versioned side-by-side (`2025` and `2026`), so upgrade on need
+  (security, a package users want, a fix) — not on every release.
+
+The [engine guide](engine-build.md#building-the-unicode-engine-from-source) also covers
+the from-source build mechanics.
+
+---
+
+## Annual engine release procedure
+
+The 2026 line is pinned to `fb6158926661cb7a7246b3a94a0cb170a9624d5a`, the
+reviewed `branch2026` tip selected on 2026-08-27. It includes the annual release
+and accepted branch fixes as of the mid-cycle qualification point. Moving this
+pin requires a new engine receipt and structural-golden review.
+
+The 2026 structural-golden review ran the same seven browser cases as the 2025
+line: pdfLaTeX, XeLaTeX, LuaLaTeX, Xe/Lua PDF import, BibTeX, and MakeIndex.
+All seven signatures are unchanged: compile success, page count, diagnostic
+codes, and XeTeX XDV geometry match 2025 exactly. The separate files under
+`e2e/goldens/2026/` are intentional even with equal contents: they prevent a
+future annual change from silently redefining the 2025 compatibility baseline.
+The weekly canary runs both annual corpora against their matching engine
+artifacts and immutable mirror URLs.
+
+An annual TeX Live upgrade requires updating the WASM engine, the object-store
+package repository, and the base format file. The steps below describe that
+upgrade, not a format-preserving engine optimization.
+
+### Step 1: Update mirror packages
+
+Provision the new year's full official TeX Live distribution under a new versioned
+CDN prefix and preserve the copying, package-license, and source materials shipped by
+that distribution. Record the release year and CDN base URL used by the engine. This
+CDN operation is independent of the WasmTex engine release checklist; the engine
+manifest does not wait for a package-by-package override review.
+
+The repository's `sync-texlive-mirror.sh`, `texlive-provenance`, and catalog tools remain
+available for anyone intentionally constructing a transformed or flattened subset.
+That workflow generates `catalog/<mirrorRevision>/` from the final selected inventory,
+then extracts and checks `semantic/<mirrorRevision>/` from those exact `.cls`/`.sty`
+bytes, the option-gated xcolor `.def` sources, and the year-specific override file. For a separately operated full mirror,
+produce the same final-inventory manifest and immutable catalogs as part of that
+deployment rather than deriving completion from an upstream or pre-transform file list.
+
+For an existing separately operated mirror, use `sync-texlive-mirror.sh --catalog-only`.
+It keeps the mirror redistribution gate separate, inventories only completion and
+semantic inputs, and refuses publication unless every selected byte matches the
+deployed endpoint. `--catalog-only` never uploads the staged `pdftex/` files; it
+publishes only immutable `catalog/<mirrorRevision>/`,
+`semantic/<mirrorRevision>/`, and their versioned inventory evidence.
+
+After provisioning, run the read-only runtime coverage audit. It flags formats
+expected but absent, such as OpenType/TrueType fonts required by XeLaTeX and
+LuaLaTeX:
+
+```bash
+TEXLIVE_OBJECT_BUCKET=<bucket> TEXLIVE_OBJECT_ENDPOINT=<endpoint> \
+  node scripts/audit-mirror.mjs --year <year>
+```
+
+Before enabling exact resource completion for the new profile:
+
+1. publish `texlive-provenance.json` and the matching immutable catalog shards;
+2. run `npm run check:texlive-catalog -- <manifest> <catalog-dir>` on the bytes to publish;
+3. update `tex-semantic-overrides-<year>.json`, inspect `coverage.json`, run the
+   semantic golden/checker, verify the exact `dvipsnam.def`/`svgnam.def`/`x11nam.def`
+   sources, reviewed expected counts, and activation options, and explicitly review every unresolved high-value scope;
+4. run any needed dynamic probe through `probe:tex-semantics`—never without its OS
+   network sandbox and time/memory limits—and merge the identity-matched report;
+5. put `{ schemaVersion, texliveYear, mirrorRevision }` into the compile profile; and
+6. verify a class/package option/key/value, conditional color palette, and resource
+   sample through that profile, including an offline cache return and a deliberate
+   revision-mismatch rejection.
+
+### Step 2: Build New WASM Engine
+Build every engine family from the new year's reviewed immutable source pin.
+Review the [customization inventory](engine-upgrade-customizations.md) before
+porting build settings and patches; previous-year formats are not assumed compatible.
+
+1. Add or update `wasm-build/texlive-source-<year>.ref` (resolve the
+   new TeX Live year's `branch<YEAR>` tip to a commit SHA — see *Upstream
+   maintenance* above).
+2. Build each engine. The Docker image bakes Phase 1 (native codegen); `build.sh` is
+   the container ENTRYPOINT that runs Phase 2 (Emscripten) — don't run it on the host.
+   Pass the pinned ref as `--build-arg TEXLIVE_REF` (CI does this via
+   year-specific ref):
+   ```bash
+   cd <wasmtex-build-checkout>
+   git checkout <exact-source-commit>
+
+   # pdfTeX + BibTeX (see .github/workflows/wasm-build.yml)
+   docker buildx build --platform linux/amd64 \
+     --build-arg TEXLIVE_REF=$(cat wasm-build/texlive-source-2026.ref) \
+     -t pdftex-wasm wasm-build/
+   docker run --platform linux/amd64 -v "$PWD/wasm-build/dist:/dist" pdftex-wasm
+
+   # LuaTeX / XeTeX (from-source helpers wrap the docker build/run):
+   ./scripts/build-luatex-fromsource.sh
+   ./scripts/build-xetex-fromsource.sh    # also needs ICU data: scripts/build-icu-data.sh
+   ```
+3. Copy the emitted engine files to `public/wasmtex/<version>/`. pdfTeX/BibTeX land in
+   `wasm-build/dist/`; the from-source helpers default to `wasm-build/dist-luatex/` and
+   `wasm-build/dist-xetex/` (override with an `[OUT_DIR]` arg).
+
+### Step 3: Extract New Base Formats
+For an annual upgrade, extract a fresh `.fmt` for each rebuilt engine; do not
+assume the previous year's format is compatible. A transparent engine optimization
+instead reuses and verifies the baseline format under the [optimization policy](engine-optimization-policy.md#format-and-state-compatibility).
+Each engine has its own extraction script. They spin up a Vite dev server,
+run the engine in a headless Chromium (Playwright), trigger a compile, and capture the
+`.fmt` bytes the new WASM engine emits.
+
+```bash
+node scripts/extract-format.mjs <version>          # pdfLaTeX  -> wasmtex-pdftex.fmt
+node scripts/extract-luatex-format.mjs <version>   # LuaLaTeX  -> wasmtex-luatex.fmt
+node scripts/extract-xetex-format.mjs <version>    # XeLaTeX   -> wasmtex-xetex.fmt
+```
+
+The runtime loads `public/wasmtex/<version>/wasmtex-<binary>.fmt` (see
+`src/engine/wasmtex-engine.ts` / `tex-fmt-engine.ts`), trying `<fmt>.gz` first and
+falling back to the raw `.fmt`. All three scripts write directly into that versioned
+directory and require the matching `.worker.js`, `.js`, and `.wasm` files from Step 2.
+
+### Step 4: Regenerate the by-name font databases
+
+The Unicode engines resolve fonts **by human name** from prebuilt databases that are
+**coupled to the engine version** — regenerate both on every upgrade, or by-name lookups
+silently fall back (XeLaTeX) / mismatch and rescan (LuaLaTeX):
+
+```bash
+# XeLaTeX: scans the verified local mirror with fc-scan.
+XETEX_FONTLIST_OUTPUT=<release>/pdftex/26/xetexfontlist.txt \
+  node scripts/gen-xetexfontlist.mjs <release>/pdftex
+
+# LuaLaTeX: luaotfload names DB. Set EXPECTED_LUAOTFLOAD / EXPECTED_DB_VERSION to the new
+# TeX Live year's luaotfload (env vars, or edit the defaults '3.29' / '6' in the script);
+# the upload step rejects a DB whose schema version mismatches, so the engine never rescans.
+# Use --fonts-dir for the exact-mirror DB; bare --generate is the quick, non-exact mode.
+node scripts/gen-luaotfload-names.mjs --generate --fonts-dir <dir>   # in a Docker environment
+LUAOTFLOAD_NAMES_OUTPUT=<release>/pdftex/51/luaotfload-names.lua \
+  node scripts/gen-luaotfload-names.mjs --generate --fonts-dir <dir>
+
+# Include the generated DB keys in a deterministic local bloom filter.
+TEXLIVE_MIRROR_ROOT=<release> TEXLIVE_BLOOM_OUTPUT=<release>/bloom-filter.v2.bin \
+  node scripts/gen-bloom-filter.mjs
+# For an already-published snapshot, rebuild it from the mirror's own manifest:
+# TEXLIVE_PROVENANCE=texlive-provenance.json node scripts/gen-bloom-filter.mjs
+# The engine asks for bloom-filter.v2.bin (1e-4 false positives) and falls back to
+# bloom-filter.bin (1e-2); a false positive costs one mirror round trip per cold compile.
+```
+
+Then regenerate the bloom filter and purge the public mirror cache (the fonts these DBs reference
+must be on the mirror + in the bloom). See [WASM Engine & TeX Live](engine.md).
+
+---
+
+## Deployment Strategy: Side-by-Side (Zero Downtime)
+
+When adding a future TeX Live release, keep the existing 2025 environment
+operational during validation by using versioned paths.
+
+### 1. Immutable R2 structure
+Instead of overwriting `pdftex/`, use an immutable snapshot prefix in R2:
+- `<bucket>/snapshots/<mirrorRevision>/2025/pdftex/...`
+- `<bucket>/snapshots/<mirrorRevision>/2026/pdftex/...`
+
+Set `TEXLIVE_OBJECT_PREFIX` and use `scripts/sync-texlive-mirror.sh`; see [mirror operations](texlive-mirror-operations.md).
+
+### 2. Client-Side Switching
+
+The `WasmTex` SDK keeps `texliveVersion` and `texliveUrl` version-aware. When a
+new release is implemented, add that year to `TexliveVersion`, stage its engine
+assets under the matching version directory, and point instances at the desired
+version during validation:
+
+```typescript
+const editor2025 = new WasmTex(editorContainer, previewContainer, {
+  texliveVersion: '2025',
+  texliveUrl: 'https://cdn.example.com/2025/'
+})
+
+// Both years are supported; stage the matching engine assets for each instance:
+const editor2026 = new WasmTex(editorContainer, previewContainer, {
+  texliveVersion: '2026',
+  texliveUrl: 'https://cdn.example.com/2026/'
+})
+```
+
+### 3. Verification & Cutover
+1. **Staging**: Deploy the new WASM engine and assets to a staging environment pointing to its immutable R2 prefix.
+2. **Validation**: Run E2E tests and manual checks.
+3. **Cutover**: Once verified, update the production environment's `VITE_TEXLIVE_URL` or constructor options to point to the new path.
+
+This preserves the current 2025 environment throughout the upgrade and keeps the
+same mechanism reusable for later releases.
+
+## Related Documents
+
+- [docs/engine.md](engine.md): High-level engine setup.
+- [docs/architecture.md](architecture.md): System architecture overview.

@@ -1,0 +1,170 @@
+import { EnvironmentNamePair } from './environment-pairs.js';
+import { CommandArg } from './package-db.js';
+export interface SourceLocation {
+    file: string;
+    line: number;
+    column: number;
+}
+export interface LabelDef {
+    name: string;
+    location: SourceLocation;
+    /** A directly preceding literal heading/caption, never inferred counter ownership. */
+    context?: {
+        kind: SectionLevel | 'caption';
+        title: string;
+        source: string;
+    };
+}
+export interface LabelRef {
+    name: string;
+    location: SourceLocation;
+}
+export interface CitationRef {
+    key: string;
+    location: SourceLocation;
+}
+export type SectionLevel = 'part' | 'chapter' | 'section' | 'subsection' | 'subsubsection' | 'paragraph';
+export interface SectionDef {
+    level: SectionLevel;
+    title: string;
+    location: SourceLocation;
+}
+export interface CommandDef {
+    name: string;
+    location: SourceLocation;
+    argCount?: number;
+    /** Statically confirmed brace/bracket argument structure; absent means unsupported. */
+    arguments?: CommandArg[];
+    /** A statically supported leading xparse star boolean. */
+    acceptsStar?: boolean;
+    /** This declaration can replace or retain an existing binding. */
+    mayRedefine?: boolean;
+}
+/** A `\command` token occurrence in the source (a call site, or the name in its own
+ *  definition). Drives find-references / rename for user-defined commands. */
+export interface CommandUse {
+    name: string;
+    location: SourceLocation;
+}
+export interface EnvironmentUse {
+    name: string;
+    location: SourceLocation;
+}
+export interface IncludeDef {
+    path: string;
+    location: SourceLocation;
+    type: 'input' | 'include' | 'subfile';
+}
+export interface PackageRef {
+    name: string;
+    options: string;
+    location: SourceLocation;
+}
+export interface ClassRef {
+    name: string;
+    options: string;
+    location: SourceLocation;
+}
+export interface ColorDefinition {
+    name: string;
+    kind: 'define' | 'provide' | 'alias';
+    model?: string;
+    value?: string;
+    alias?: string;
+    location: SourceLocation;
+    provenance?: 'project' | 'runtime-observed';
+}
+export interface ColorActivation {
+    names: string[];
+    kind: 'define' | 'provide';
+    location: SourceLocation;
+}
+export type ProjectValueRole = 'definition' | 'usage' | 'alias' | 'runtime-observed';
+/** A statically recoverable named value contributed by project source. */
+export interface ProjectValue {
+    name: string;
+    role: ProjectValueRole;
+    location: SourceLocation;
+    /** Optional declaration target, for example the font behind a command alias. */
+    target?: string;
+}
+export type ProjectKeyValueType = 'flag' | 'boolean' | 'enum' | 'number' | 'dimension' | 'color' | 'file' | 'command' | 'free-text';
+/** A key declared in the project through xkeyval, pgfkeys, or LaTeX3 keys. */
+export interface ProjectKeyDefinition {
+    family: string;
+    name: string;
+    valueType: ProjectKeyValueType;
+    values?: string[];
+    location: SourceLocation;
+    provenance?: 'project' | 'runtime-observed';
+}
+export interface BibliographyRef {
+    path: string;
+    location: SourceLocation;
+}
+export interface FileSymbols {
+    /** Matched literal environment names, computed with the owning parser pass. */
+    environmentNamePairs?: EnvironmentNamePair[];
+    labels: LabelDef[];
+    labelRefs: LabelRef[];
+    citations: CitationRef[];
+    sections: SectionDef[];
+    commands: CommandDef[];
+    commandUses: CommandUse[];
+    environments: EnvironmentUse[];
+    environmentDefs: EnvironmentUse[];
+    includes: IncludeDef[];
+    classes: ClassRef[];
+    packages: PackageRef[];
+    colors: ColorDefinition[];
+    colorActivations: ColorActivation[];
+    counters: ProjectValue[];
+    lengths: ProjectValue[];
+    glossaryEntries: ProjectValue[];
+    acronymEntries: ProjectValue[];
+    fontFamilies: ProjectValue[];
+    keys: ProjectKeyDefinition[];
+    bibliographies: BibliographyRef[];
+    bibItems: BibitemDef[];
+}
+/** Literal fields observed in a compiled LaTeX newlabel record, not expanded TeX. */
+export interface AuxLabel {
+    number: string;
+    page?: string;
+}
+export interface AuxData {
+    labels: Map<string, string>;
+    /** Structured records; absent for legacy callers supplying number-only data. */
+    labelDetails?: Map<string, AuxLabel>;
+    /** Repeated definitions cannot supply one unambiguous reference value. */
+    ambiguousLabels?: Set<string>;
+    /** False when referenced output files could not all be resolved. */
+    complete?: boolean;
+    citations: Set<string>;
+    includes: string[];
+}
+export interface BibitemDef {
+    key: string;
+    location: SourceLocation;
+}
+export interface BibEntry {
+    key: string;
+    type: string;
+    location: SourceLocation;
+    title?: string;
+    author?: string;
+    year?: string;
+    /** Publication venue: journal, booktitle, or publisher (whichever is present). */
+    journal?: string;
+    /** All parsed fields (lowercased names → cleaned values). */
+    fields?: Record<string, string>;
+}
+export interface BibStringDef {
+    name: string;
+    value: string;
+    location: SourceLocation;
+}
+export interface ParsedBibFile {
+    entries: BibEntry[];
+    strings: BibStringDef[];
+}

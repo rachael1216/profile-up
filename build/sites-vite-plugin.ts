@@ -105,8 +105,8 @@ export function sites({ mockAuth = true } = {}): Plugin {
         const signIn = url.pathname === "/signin-with-chatgpt";
         const signOut = url.pathname === "/signout-with-chatgpt";
         if (!signIn && !signOut) {
-          if (signInCookies.length === 1 && signInCookies[0] === "1") {
-            setHeader(request, "oai-authenticated-user-id", localUserId);
+          if (signInCookies.length === 1 && ["1","2"].includes(signInCookies[0])) {
+            setHeader(request, "oai-authenticated-user-id", signInCookies[0]==="2" ? "local_second" : localUserId);
             setHeader(request, "oai-authenticated-user-email", localEmail);
             setHeader(
               request,

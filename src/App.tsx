@@ -1,3 +1,4 @@
+import FileLibrary from './components/FileLibrary';
 import CloudPanel from './components/CloudPanel';
 import { useEffect, useRef, useState, cloneElement, isValidElement, Children, type ReactNode } from 'react';
 import { ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, ChevronRight, Code2, Download, ExternalLink, Eye, FileJson, FileText, Globe2, GraduationCap, GripVertical, HelpCircle, ImagePlus, LayoutDashboard, LayoutTemplate, Link2, Menu, Monitor, Plus, Search, Settings2, ShieldCheck, Smartphone, Sparkles, Trash2, Upload, UserRound, X } from 'lucide-react';
@@ -30,7 +31,7 @@ const navigation = [{
   icon: ArrowDownToLine
 }] as const;
 const templates: Template[] = ['classic', 'research', 'teaching'];
-function initialDraft(storageKey: string) {
+function initialDraft(storageKey: string, fallback:Profile=demoProfile) {
   try {
     const raw = localStorage.getItem(storageKey);
     if (raw) {
@@ -42,19 +43,19 @@ function initialDraft(storageKey: string) {
       } catch {
         localStorage.setItem('profileup-recovery-v1', raw);
         return {
-          profile: structuredClone(demoProfile),
+          profile: structuredClone(fallback),
           error: '旧草稿格式无法读取，原始内容已保留在浏览器恢复备份中。'
         };
       }
     }
   } catch {
     return {
-      profile: structuredClone(demoProfile),
+      profile: structuredClone(fallback),
       error: '浏览器存储不可用，请及时下载 JSON 备份。'
     };
   }
   return {
-    profile: structuredClone(demoProfile),
+    profile: structuredClone(fallback),
     error: ''
   };
 }
@@ -91,9 +92,9 @@ function MiniTemplate({
 }) {
   return <div className={`mini-template ${template} ${cv ? 'cv-mini' : ''}`} aria-hidden="true"><div className="mini-nav"><i /><span /><span /></div><div className="mini-hero"><div className="mini-portrait">LC</div><div><b>Lin Chen</b><span>Researcher & educator</span><i /><i /></div></div><div className="mini-body"><strong>{template === 'research' ? 'Selected projects' : template === 'teaching' ? 'Teaching & ideas' : cv ? 'Education' : 'About me'}</strong><i /><i /><i className="short" /><strong>{template === 'research' ? 'Publications' : cv ? 'Publications' : 'Selected work'}</strong><div className="mini-entry"><em /><div><i /><i className="short" /></div></div><div className="mini-entry"><em /><div><i /><i className="short" /></div></div></div></div>;
 }
-export default function App({ account = null }: { account?: { id: string; name: string } | null }) {
-  const storageKey = account ? `profileup-draft-v1:${account.id}` : 'profileup-draft-v1';
-  const [loaded] = useState(() => initialDraft(storageKey)),
+export default function App({ account = null, cloudId, initialProfile, profileLabel, workspace, onCloudSaved, onInterfaceLanguageChange }: { account?: { id: string; name: string } | null; cloudId?:string; initialProfile?:Profile; profileLabel?:string; workspace?:ReactNode; onCloudSaved?:()=>void; onInterfaceLanguageChange?:(lang:'zh'|'en')=>void }) {
+  const storageKey = account ? `profileup-draft-v1:${account.id}:${cloudId??'new'}` : 'profileup-draft-v1';
+  const [loaded] = useState(() => initialDraft(storageKey,initialProfile)),
     [profile, setProfile] = useState<Profile>(loaded.profile);
   const [page, setPage] = useState<Page>(() => ['home', 'editor', 'website', 'cv', 'exports'].includes(location.hash.slice(1)) ? location.hash.slice(1) as Page : 'website');
   const [demoMode, setDemoMode] = useState(false),
@@ -108,6 +109,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
     [saved, setSaved] = useState(false),
     [storageError, setStorageError] = useState(loaded.error);
   const [busy, setBusy] = useState(''),
+    [compileProgress,setCompileProgress]=useState(''),
     [toast, setToast] = useState(''),
     [help, setHelp] = useState(false),
     [preview, setPreview] = useState<Output | null>(null),
@@ -125,7 +127,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
         setStorageError(tr("草稿未能保存：浏览器存储已满或被禁用，请下载 JSON 备份。"));
       }
     }, 400);
-    return () => clearTimeout(id);
+    return () => {clearTimeout(id);try{localStorage.setItem(storageKey,JSON.stringify(profile));}catch{}};
   }, [profile]);
   useEffect(() => {
     if (!toast) return;
@@ -189,7 +191,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
       const exportProfile = page === 'cv' ? cvProfile : profile;
       const e = await import('./lib/exports');
       if (kind === 'website') await e.exportWebsite(profile);
-      if (kind === 'pdf') await e.exportPDF(exportProfile);
+      if (kind === 'pdf') await e.exportPDF(exportProfile,setCompileProgress);
       if (kind === 'tex') await e.exportTex(exportProfile);
       if (kind === 'docx') {
         const d = await import('./lib/docx');
@@ -200,7 +202,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
     } catch (e) {
       setToast(e instanceof Error ? e.message : tr("导出失败，请重试。"));
     } finally {
-      setBusy('');
+      setBusy('');setCompileProgress('');
     }
   };
   const importBackup = async (file?: File) => {
@@ -469,11 +471,14 @@ export default function App({ account = null }: { account?: { id: string; name: 
             })}><option value="course">{tr("课程")}</option><option value="notes">{tr("笔记 / 讲义")}</option><option value="tutorial">{tr("教程")}</option><option value="video">{tr("授课视频")}</option></select></Field>}</div></article>)}{key === 'links' && <p className="editor-note"><Link2 size={15} />{tr("链接为用户填写，当前版本未验证账号归属。导出只启用 HTTP / HTTPS 链接。")}</p>}</>;
   };
   return <div className="app-shell"><input ref={importInput} type="file" accept=".json,application/json" className="hidden" onChange={e => importBackup(e.target.files?.[0])} /><input ref={photoInput} type="file" accept="image/jpeg,image/png" className="hidden" onChange={e => uploadPhoto(e.target.files?.[0])} />{sideOpen && <button className="sidebar-scrim" aria-label={tr("关闭导航")} onClick={() => setSideOpen(false)} />}
-    <aside className={`sidebar ${sideOpen ? 'open' : ''}`}><button className="brand" onClick={() => go('home')}><span className="brand-icon"><ArrowUpRight size={24} /></span><span>Profile<span className="brand-up">Up</span><i /></span></button><div className="workspace-label">{tr("你的个人工作空间")}</div><nav aria-label={tr("主导航")}>{navigation.map(n => <button key={n.id} className={page === n.id ? 'active' : ''} onClick={() => go(n.id)}><n.icon size={18} /><span>{tr(n.name)}</span>{page === n.id && <span className="nav-indicator" />}</button>)}</nav><div className="sidebar-guide"><div className="guide-icon"><BookOpen size={19} /></div><h3>{tr("学术表达，")}<br />{tr("清晰而有分寸。")}</h3><p>{tr("个人主页 · 学术履历")}<br />{tr("中英双语 · 持续更新")}</p><button onClick={() => setHelp(true)}>{tr("查看使用指南")}<ArrowUpRight size={14} /></button></div><div className="sidebar-bottom"><button onClick={() => setHelp(true)}><HelpCircle size={17} />{tr("帮助与使用指南")}</button><div className="workspace-user"><div className="user-avatar">{displayName.slice(0, 1).toUpperCase()}</div><div><strong>{tr("个人工作空间")}</strong><span>{tr("云端版 · v0.3")}</span></div><ShieldCheck size={15} /></div></div></aside>
-    <div className="workspace"><header className="topbar"><div className="breadcrumb"><button className="mobile-menu" aria-label={tr("打开导航")} onClick={() => setSideOpen(true)}><Menu size={20} /></button><span>{tr("工作空间")}</span><ChevronRight size={13} /><strong>{tr(navigation.find(n => n.id === page)?.name ?? '')}</strong></div><div className="topbar-right"><select className="interface-language" aria-label={tr("Interface language / 界面语言")} value={uiLanguage} onChange={e => settings('interfaceLanguage', e.target.value as 'zh' | 'en')}><option value="zh">{tr("中文")}</option><option value="en">English</option></select><span className={`save-status ${saved ? 'saved' : ''}`}><span />{saved ? tr("已保存到此浏览器") : tr("保存中…")}</span><button className="icon-button" aria-label={tr("使用指南")} onClick={() => setHelp(true)}><HelpCircle size={18} /></button><div className="topbar-avatar">{displayName.slice(0, 1).toUpperCase()}</div></div></header>
+    <aside className={`sidebar ${sideOpen ? 'open' : ''}`}><button className="brand" onClick={() => go('home')}><span className="brand-icon"><ArrowUpRight size={24} /></span><span>Profile<span className="brand-up">Up</span><i /></span></button><div className="workspace-label">{tr("你的个人工作空间")}</div><nav aria-label={tr("主导航")}>{navigation.map(n => <button key={n.id} className={page === n.id ? 'active' : ''} onClick={() => go(n.id)}><n.icon size={18} /><span>{tr(n.name)}</span>{page === n.id && <span className="nav-indicator" />}</button>)}</nav><div className="sidebar-guide"><div className="guide-icon"><BookOpen size={19} /></div><h3>{tr("学术表达，")}<br />{tr("清晰而有分寸。")}</h3><p>{tr("个人主页 · 学术履历")}<br />{tr("中英双语 · 持续更新")}</p><button onClick={() => setHelp(true)}>{tr("查看使用指南")}<ArrowUpRight size={14} /></button></div><div className="sidebar-bottom"><a href="/wasmtex/index.html" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#717968"}}>TeX · Open-source notices</a><button onClick={() => setHelp(true)}><HelpCircle size={17} />{tr("帮助与使用指南")}</button><div className="workspace-user"><div className="user-avatar">{displayName.slice(0, 1).toUpperCase()}</div><div><strong>{tr("个人工作空间")}</strong><span>{tr("云端版 · v0.4")}</span></div><ShieldCheck size={15} /></div></div></aside>
+    <div className="workspace"><header className="topbar"><div className="breadcrumb"><button className="mobile-menu" aria-label={tr("打开导航")} onClick={() => setSideOpen(true)}><Menu size={20} /></button><span>{tr("工作空间")}</span><ChevronRight size={13} /><strong>{tr(navigation.find(n => n.id === page)?.name ?? '')}</strong></div><div className="topbar-right"><select className="interface-language" aria-label={tr("Interface language / 界面语言")} value={uiLanguage} onChange={e => {settings('interfaceLanguage', e.target.value as 'zh' | 'en');onInterfaceLanguageChange?.(e.target.value as 'zh'|'en');}}><option value="zh">{tr("中文")}</option><option value="en">English</option></select><span className={`save-status ${saved ? 'saved' : ''}`}><span />{saved ? tr("已保存到此浏览器") : tr("保存中…")}</span><button className="icon-button" aria-label={tr("使用指南")} onClick={() => setHelp(true)}><HelpCircle size={18} /></button><div className="topbar-avatar">{displayName.slice(0, 1).toUpperCase()}</div></div></header>
     <main className="main-content">{storageError && <div className="warning-banner">{storageError}<button aria-label={tr("关闭提示")} onClick={() => setStorageError('')}><X size={14} /></button></div>}
       {account && localStorage.getItem('profileup-draft-v1') && <button className="text-button" onClick={()=>{try { const old=parseBackup(JSON.parse(localStorage.getItem('profileup-draft-v1')!)); setProfile(old);setToast('已导入本机离线草稿，请检查后保存到云端。'); } catch {setToast('本机草稿无法读取，请使用 JSON 备份导入。');}}}>导入本机离线草稿</button>}
-      <CloudPanel account={account} profile={profile} onLoad={setProfile} onAlert={setToast} />
+      {workspace}
+      <CloudPanel account={account} cloudId={cloudId} profileLabel={profileLabel} onSaved={onCloudSaved} profile={profile} onLoad={setProfile} onAlert={setToast} />
+      {cloudId && <FileLibrary key={cloudId} profileId={cloudId} selected={profile.websiteFiles} onSelect={ids=>update(p=>{p.websiteFiles=ids;})} english={uiLanguage==='en'} />}
+      {compileProgress && <p className="tex-progress" role="status">{compileProgress}</p>}
       {page === 'website' && builder('website')}{page === 'cv' && builder('cv')}
       {page === 'home' && <><div className="home-hero"><div><p className="eyebrow">PROFILE UP · ACADEMIC STUDIO</p><h1>{tr("个人网站与")}<br />{tr("学术简历。")}</h1><p>{tr("搭建个人网站，制作专业简历。")}<br />{tr("你的研究与经历，从此有了更好的呈现。")}</p><div className="home-actions"><button className="button primary" onClick={() => go('website')}>{tr("搭建个人网站")}<ArrowRight size={16} /></button><button className="button secondary" onClick={() => go('cv')}>{tr("制作学术简历")}</button></div></div><div className="hero-composition"><div className="hero-window"><div className="window-bar"><i /><i /><i /><span>your-name / website</span></div><MiniTemplate template="classic" /></div><div className="hero-cv"><MiniTemplate template="teaching" cv /></div><span className="hero-note">Academic presence, thoughtfully composed.</span></div></div><div className="section-heading"><h2>{tr("从这里开始")}</h2><span className="subtle">{tr("当前为可编辑的示例内容，可替换为你的信息")}</span></div><div className="start-grid">{[{
               icon: FileText,
@@ -508,7 +513,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
               icon: FileText,
               title: tr("PDF 学术简历"),
               format: 'PDF',
-              desc: tr("可搜索、可复制文本的 PDF。支持中英文、照片和多页内容。"),
+              desc: tr("XeLaTeX 编译的 PDF。支持中英文、照片和多页内容。"),
               action: tr("下载 PDF"),
               note: `${cvCatalog[profile.settings.cvTemplate][uiLanguage === 'en' ? 'en' : 'zh']} · ${profile.settings.paper.toUpperCase()}`
             }, {
@@ -551,7 +556,7 @@ export default function App({ account = null }: { account?: { id: string; name: 
               setProfile(confirm === 'empty' ? emptyProfile() : structuredClone(demoProfile));
               setConfirm(null);
               setToast(tr("内容已更新。"));
-            }}>{tr("确认替换")}</button></div></div> : <div className="modal-content"><p className="help-intro">{tr("一份内容，开启你的网站与简历。")}</p><ol><li><strong>{tr("编辑内容")}</strong><p>{tr("替换示例信息，按组块填写经历、成果和链接；分别编辑中文与英文。")}</p></li><li><strong>{tr("挑选模板")}</strong><p>{tr("在个人网站和简历工作室选择风格，设置模块顺序与公开范围。")}</p></li><li><strong>{tr("预览并下载")}</strong><p>{tr("导出静态网站、PDF、TeX 源项目；完整 JSON 备份可以再次导入。")}</p></li></ol><div className="help-limit"><ShieldCheck size={17} /><p>{tr("v0.3 支持登录、云端草稿与个人主页发布。机构邮箱认证与外部账号归属验证尚未接入。示例人物和成果用于演示。PDF、Word 与 TeX 分页可能不同。")}</p></div><button className="button primary" onClick={() => {
+            }}>{tr("确认替换")}</button></div></div> : <div className="modal-content"><p className="help-intro">{tr("一份内容，开启你的网站与简历。")}</p><ol><li><strong>{tr("编辑内容")}</strong><p>{tr("替换示例信息，按组块填写经历、成果和链接；分别编辑中文与英文。")}</p></li><li><strong>{tr("挑选模板")}</strong><p>{tr("在个人网站和简历工作室选择风格，设置模块顺序与公开范围。")}</p></li><li><strong>{tr("预览并下载")}</strong><p>{tr("导出静态网站、PDF、TeX 源项目；完整 JSON 备份可以再次导入。")}</p></li></ol><div className="help-limit"><ShieldCheck size={17} /><p>{tr("v0.4 支持账号、多份资料、PDF 附件和个人主页发布。机构邮箱认证与外部账号归属验证尚未接入。示例人物和成果用于演示。PDF 使用 XeLaTeX 编译；Word 与网页预览的分页可能不同。")}</p></div><button className="button primary" onClick={() => {
             setHelp(false);
             go('editor');
           }}>{tr("开始填写我的内容")}<ArrowRight size={15} /></button></div>}</section></div>}

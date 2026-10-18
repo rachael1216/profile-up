@@ -21,6 +21,7 @@ export const sectionEnglish: Record<SectionId, string> = { about: 'About', educa
 const arrangement = z.array(z.object({ id: section, enabled: z.boolean() })).max(10).refine(a => new Set(a.map(x => x.id)).size === a.length, '模块不能重复');
 export const profileSchema = z.object({
   version: z.literal(1),
+  websiteFiles: z.array(z.string().uuid()).max(50).default([]),
   fieldIds: z.array(z.string().max(160)).max(100).default([]),
   basics: z.object({ name: local, title: local, institution: local, department: local, location: local, biography: local, statement: local, email: text, phone: text, aliases: text, interests: local, skills: local, photo: z.string().max(1500000), showEmail: z.boolean(), showPhone: z.boolean() }),
   links: z.array(link).max(30), education: z.array(education).max(100), positions: z.array(position).max(100), publications: z.array(publication).max(1000), projects: z.array(project).max(100), awards: z.array(award).max(100), teaching: z.array(course).max(100), news: z.array(news).max(100), team: z.array(person).max(100),
@@ -35,6 +36,7 @@ export const localized = (value: Localized, lang: 'zh' | 'en') => value[lang] ||
 export const uid = () => crypto.randomUUID();
 export const demoProfile: Profile = {
   version: 1,
+  websiteFiles: [],
   fieldIds: ['moe:0812', 'acm:1'],
   basics: { name: L('陈林', 'Lin Chen'), title: L('人机交互研究者', 'Human–Computer Interaction Researcher'), institution: L('示例大学', 'Example University'), department: L('计算机科学学院', 'School of Computer Science'), location: L('中国 · 杭州', 'Hangzhou, China'), biography: L('我研究人与智能系统如何更好地合作。通过交互设计、实证研究与开放工具，让技术变得更易理解、更值得信任。', 'I study how people and intelligent systems can work better together. Through interaction design, empirical research, and open tools, I make technology more understandable and accessible.'), statement: L('我的研究关注以人为中心的人工智能、创作工具与学习体验。我希望构建能够支持个人表达与知识分享的交互系统。', 'My research explores human-centered AI, creativity support tools, and learning experiences. I build interactive systems that support personal expression and knowledge sharing.'), email: 'lin.chen@example.edu', phone: '', aliases: 'Lin Chen; L. Chen; 陈林', interests: L('人机交互, 以人为中心的人工智能, 创作工具', 'Human–Computer Interaction, Human-centered AI, Creativity Support'), skills: L('Python, TypeScript, 实验设计, 质性研究, 原型设计', 'Python, TypeScript, Experimental design, Qualitative research, Prototyping'), photo: '', showEmail: true, showPhone: false },
   links: [{ id: 'link-1', label: 'Google Scholar', url: 'https://scholar.google.com/', visible: true }, { id: 'link-2', label: 'GitHub', url: 'https://github.com/', visible: true }, { id: 'link-3', label: 'ORCID', url: 'https://orcid.org/', visible: true }],

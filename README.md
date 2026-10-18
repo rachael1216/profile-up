@@ -17,7 +17,7 @@
 
 Profile Up provides a common authoring interface for academic websites and curricula vitae. Users enter biographical information, education, appointments, publications, projects, teaching materials and related records in Chinese and English. The system renders these records as a personal website or a CV with configurable typography and section order. Website publication uses a separate snapshot containing the entries selected for display; cloud drafts retain the complete editable record. The implementation combines browser-based editing and document export with authenticated cloud storage and website publication.
 
-The current hosted deployment is restricted to the project owner. Website publication follows this deployment access policy.
+The hosted workspace and published personal pages are publicly accessible. Editing, cloud records and private files require sign-in with ChatGPT. The first profile creates an application account associated with the identity provider; Profile Up does not store passwords.
 
 ## Current implementation
 
@@ -26,27 +26,29 @@ The current hosted deployment is restricted to the project owner. Website public
 | Authoring | Bilingual records, portraits, external links, section ordering and visibility controls |
 | Website generation | Three visual styles; hosted personal pages at `/p/{slug}`; publication and withdrawal |
 | CV generation | Six layout styles; Latin and Chinese fonts; configurable size, spacing, paper and portrait |
-| Document export | Searchable PDF, editable DOCX, a XeLaTeX source project and a static website archive |
-| Cloud storage | Drafts indexed by the authenticated account, with revision checks on updates |
-| Recovery | Browser-local drafts and JSON import/export; local drafts are separated by account |
+| Document export | XeLaTeX-compiled PDF, editable DOCX, the corresponding TeX source project and a static website archive |
+| Cloud storage | Up to 30 named profiles per account; independent drafts, revision checks and published websites |
+| PDF library | Certificates, publications and lecture notes; private downloads and explicit per-website publication |
+| Recovery | Browser-local drafts and JSON import/export; local drafts are separated by account and profile |
 
 Templates are organised by visual and typographic style. Research-area references are maintained separately and identify their classification source, version and translation status.
 
 ## Architecture
 
-The editor is implemented in React and TypeScript. Vinext serves the application and API routes on Cloudflare Workers. Cloudflare D1 stores editable drafts and published website snapshots. Hosted identity is supplied by the Sites authentication service; write operations require an authenticated account and a matching request origin.
+The editor is implemented in React and TypeScript. Vinext serves the application and API routes on Cloudflare Workers. Cloudflare D1 stores named profiles, attachment metadata and published website snapshots. Cloudflare R2 stores PDF files. The XeLaTeX and dvipdfmx engines run in browser Web Workers; the deployment serves a pinned engine release and a fixed TeX Live package subset. Hosted identity is supplied by the Sites authentication service; write operations require an authenticated account and a matching request origin.
 
 The `projectProfile` function selects records for each output before rendering. Published pages use the website projection; CV exports use the CV projection. A cloud draft update increments its revision. An update based on an earlier revision is rejected, allowing the user to retain local work before loading the cloud record. A website is updated only when the user publishes again.
 
 ## Use
 
-1. Sign in to the hosted workspace, or run the application locally.
+1. Sign in with ChatGPT and create a named profile. Additional profiles can be created or copied from a saved profile.
 2. Enter information in the content editor. Chinese and English content can be edited independently.
-3. Select website and CV styles, typography and displayed sections.
-4. Save the draft to the cloud. Publish the website to obtain its address.
-5. Download the required CV or website files. A JSON backup preserves the full editable record.
+3. Upload PDF files as needed. Files are private until explicitly selected for website publication.
+4. Select the website name, visual style and displayed sections; select CV typography and sections independently.
+5. Save the draft to the cloud. Publish the website to obtain its address.
+6. Download the required CV or website files. A JSON backup preserves the full editable record.
 
-Publication makes the selected website content accessible according to the deployment's access policy. Withdrawing a page retains its cloud draft and publication record. Changing the website slug and publishing again retires the previous address.
+Publication makes the selected website content and selected attachments accessible to anyone with the URL. Withdrawing a page retains its cloud draft and publication record. Changing the website slug and publishing again retires the previous address.
 
 ## Local installation
 
@@ -80,12 +82,12 @@ The tests cover record validation, output filtering, escaping, document export a
 
 ## Scope and limitations
 
-This repository contains a research prototype. Institutional email verification, external account ownership verification, automatic publication import, custom domains and collaborative editing are under development. Cloud submissions are limited to 900 KB per draft; portraits are resized in the browser. Course videos are represented by external links.
+This repository contains a research prototype. Institutional email verification, external account ownership verification, automatic publication import, custom domains and collaborative editing are under development. Cloud submissions are limited to 900 KB per draft; portraits are resized in the browser. Each account can keep 30 profiles and 100 MB of PDFs, with 50 files per profile and 10 MB per file. Course videos are represented by external links. The current identity provider is ChatGPT; independent email/password registration is not implemented.
 
-PDF, Word and XeLaTeX use different layout engines. The browser preview illustrates the selected style; pagination and glyph appearance can differ in exported documents. Word resolves font names using the reader's installed fonts. The other exports embed or package redistributable fonts. Font sources and licences are documented in [references](docs/references.md).
+The PDF is compiled from the same TeX source provided in the source download. Browser and Word previews use their own layout engines; their pagination can differ from the compiled PDF. The first TeX compilation downloads engine and font assets from this website; subsequent visits can use the browser cache. Word resolves font names using the reader's installed fonts. The other exports embed or package redistributable fonts. Font sources and licences are documented in [references](docs/references.md).
 
 No user study or benchmark result is reported for this version. Demonstration records describe fictional people and work.
 
 ## Licence
 
-Application code is distributed under the [MIT licence](LICENSE). Fonts and vendored components retain their accompanying licences.
+Application code is distributed under the [MIT licence](LICENSE). Fonts and vendored components retain their accompanying licences. WasmTex SDK code is MIT; its unmodified engine release carries separate GPL/LGPL and component terms. [Engine notices and corresponding source](https://profile-up-studio.beigemelon7.chatgpt.site/wasmtex/index.html) are provided separately. See [TeX provenance](docs/tex-runtime.md).
