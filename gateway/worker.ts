@@ -1,14 +1,17 @@
-type GatewayEnv={UPSTREAM_ORIGIN:string};
+type GatewayEnv={UPSTREAM_ORIGIN:string;GATEWAY_SHARED_SECRET:string};
 type Transport=(request:Request)=>Promise<Response>;
 const safeMethods=new Set(['GET','HEAD','OPTIONS']);
 
 /** Same-origin entry point; database and file ownership remain in the application. */
 export async function forward(request:Request,env:GatewayEnv,transport:Transport=fetch):Promise<Response>{
  const incoming=new URL(request.url),upstream=new URL(env.UPSTREAM_ORIGIN);
+ if(!/^[a-f0-9]{64}$/.test(env.GATEWAY_SHARED_SECRET??''))return new Response('Service configuration is incomplete',{status:503});
  if(upstream.protocol!=='https:'||upstream.username||upstream.password||upstream.pathname!=='/'||upstream.search||upstream.hash)return new Response('Invalid upstream configuration',{status:503});
  if(!safeMethods.has(request.method)&&request.headers.get('Origin')!==incoming.origin)return new Response(JSON.stringify({error:'请求来源不匹配。'}),{status:403,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
  const target=new URL(upstream.origin);target.pathname=incoming.pathname;target.search=incoming.search;
  const headers=new Headers(request.headers);headers.delete('Host');headers.delete('Forwarded');headers.delete('X-Forwarded-Host');headers.delete('X-Forwarded-Proto');
+ headers.set('X-ProfileUp-Gateway-Key',env.GATEWAY_SHARED_SECRET);headers.delete('X-ProfileUp-Client-IP');
+ const ip=request.headers.get('CF-Connecting-IP');if(ip)headers.set('X-ProfileUp-Client-IP',ip);
  if(headers.get('Origin')===incoming.origin)headers.set('Origin',upstream.origin);
  const referer=headers.get('Referer');if(referer?.startsWith(incoming.origin+'/'))headers.set('Referer',upstream.origin+referer.slice(incoming.origin.length));
  const init:RequestInit&{duplex:'half'}={method:request.method,headers,redirect:'manual',duplex:'half'};

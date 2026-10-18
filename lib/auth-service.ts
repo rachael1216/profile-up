@@ -5,6 +5,7 @@ import {ApiError,checkOrigin,readJSON} from './request-validation';
 import {authCookie,authCookieName,cookieValue,configuredSettings,digest,maskContact,normalizeContact,randomToken,type AuthChannel} from './auth-contract';
 import {otpProvider} from './otp-provider';
 import {dummyPasswordHash,hashPassword,validPassword,verifyPassword} from './password';
+import {clientIP} from './client-ip';
 export type AppUser={id:string;name:string;provider:'otp'|'password-demo';verified:boolean};
 const SESSION_SECONDS=8*60*60,CHALLENGE_SECONDS=10*60;
 function settings(){return configuredSettings({url:env.SUPABASE_URL,key:env.SUPABASE_PUBLISHABLE_KEY,emailEnabled:env.AUTH_EMAIL_ENABLED,smsEnabled:env.AUTH_SMS_ENABLED,captchaSiteKey:env.TURNSTILE_SITE_KEY});}
@@ -41,7 +42,7 @@ async function passwordSession(request:Request,id:string){
 }
 export async function passwordAccount(request:Request,action:'register'|'login'){
  checkOrigin(request);if(!demoEnabled())throw new ApiError(503,'演示账号暂未开放。');
- const body=await readJSON(request,8192),contact=normalizeContact(body.channel,body.contact),password=validPassword(body.password),ip=request.headers.get('CF-Connecting-IP')??'loopback';
+ const body=await readJSON(request,8192),contact=normalizeContact(body.channel,body.contact),password=validPassword(body.password),ip=clientIP(request,env.GATEWAY_SHARED_SECRET);
  await limit(`password:${action}:ip:${ip}`,action==='register'?5:30,action==='register'?3600:600);
  await limit(`password:${action}:contact:${contact.channel}:${contact.destination}`,action==='register'?3:10,600);
  if(action==='register'){
@@ -60,7 +61,7 @@ export async function sendOtp(request:Request){
  checkOrigin(request);const body=await readJSON(request,8192),contact=normalizeContact(body.channel,body.contact),config=enabled(contact.channel);
  const captchaToken=typeof body.captchaToken==='string'&&body.captchaToken.length<=4096?body.captchaToken:undefined;
  if(config.captchaSiteKey&&!captchaToken)throw new ApiError(400,'请先完成人机验证。');
- const ip=request.headers.get('CF-Connecting-IP')??'loopback';
+ const ip=clientIP(request,env.GATEWAY_SHARED_SECRET);
  await limit(`send:ip:${ip}`,5,600);await limit(`send:target:${contact.destination}`,1,60);await limit(`send:hour:${contact.destination}`,6,3600);
  const daily=Number(env.AUTH_SMS_DAILY_LIMIT??'25');await limit(`send:global:${contact.channel}`,contact.channel==='sms'&&Number.isInteger(daily)&&daily>0?Math.min(daily,1000):contact.channel==='email'?200:25,86400);
  await otpProvider(config.origin!,config.key!).send(contact,captchaToken);
@@ -73,7 +74,7 @@ export async function sendOtp(request:Request){
 export async function verifyOtp(request:Request){
  checkOrigin(request);const body=await readJSON(request,8192);if(typeof body.challengeId!=='string'||body.challengeId.length>50||typeof body.code!=='string'||!/^\d{6}$/.test(body.code))throw new ApiError(400,'请填写 6 位数字验证码。');
  const token=browserToken(request,'challenge');if(!token||!/^[a-f0-9]{64}$/.test(token))throw new ApiError(400,'验证会话已过期，请重新获取验证码。');
- await limit(`verify:ip:${request.headers.get('CF-Connecting-IP')??'loopback'}`,20,600);
+ await limit(`verify:ip:${clientIP(request,env.GATEWAY_SHARED_SECRET)}`,20,600);
  const now=Math.floor(Date.now()/1000),browserHash=await digest(token);
  const challenge=await database().prepare('SELECT channel,contact FROM auth_challenges WHERE id=? AND browser_hash=? AND used=0 AND expires_at>? AND attempts<5').bind(body.challengeId,browserHash,now).first<{channel:AuthChannel;contact:string}>();
  if(!challenge)throw new ApiError(400,'验证码无效或已过期，请重新获取。');

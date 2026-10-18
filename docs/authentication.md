@@ -44,6 +44,7 @@ The local tests use an injected HTTP transport for provider protocol checks and 
 | `SUPABASE_URL` | HTTPS origin of the selected Supabase project |
 | `SUPABASE_PUBLISHABLE_KEY` | Project publishable key, retained in server configuration |
 | `AUTH_DEMO_PASSWORD_ENABLED` | `true` to allow the explicitly unverified password demo |
+| `GATEWAY_SHARED_SECRET` | Private credential shared with the independent entry Worker for trusted visitor-IP forwarding |
 | `AUTH_EMAIL_ENABLED` | `true` only after public email delivery is configured and checked |
 | `AUTH_SMS_ENABLED` | `true` only after the SMS provider and target regions are configured and checked |
 | `AUTH_SMS_DAILY_LIMIT` | Default `25` for this demo |

@@ -3,7 +3,7 @@ import {signInFixture} from './auth-fixtures';
 import {demoProfile} from '../../src/lib/model';
 const origin='http://127.0.0.1:5173',headers={Origin:origin};
 test('profiles, PDF ownership, public snapshots and withdrawal',async({page,browser})=>{
- await signInFixture(page.context());await page.goto('/');
+ await signInFixture(page.context());const initiallyLoaded=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/profiles'&&r.request().method()==='GET');await page.goto('/');await initiallyLoaded;
  const label=`Test ${Date.now()}`;
  const created=await page.request.post('/api/profiles',{headers,data:{label}});expect(created.status()).toBe(201);const a=await created.json();
  const second=await page.request.post('/api/profiles',{headers,data:{label:label+' second'}});expect(second.status()).toBe(201);const b=await second.json();
@@ -38,8 +38,8 @@ test('profiles, PDF ownership, public snapshots and withdrawal',async({page,brow
  await expect.poll(async()=> (await (await page.request.get(`/api/profiles/${a.id}`)).json()).label).toBe(label+' renamed');
  await page.getByRole('button',{name:'编辑内容',exact:false}).first().click();await page.locator('.editor-panel-heading').getByRole('button',{name:'English',exact:true}).click();
  await page.getByLabel('姓名',{exact:true}).fill('Local-only edit');
- await page.getByRole('combobox',{name:'选择资料',exact:true}).selectOption(b.id);await expect(page.getByRole('button',{name:'保存到云端',exact:true})).toBeEnabled();
- await page.getByRole('combobox',{name:'选择资料',exact:true}).selectOption(a.id);await page.locator('.editor-panel-heading').getByRole('button',{name:'English',exact:true}).click();await expect(page.getByLabel('姓名',{exact:true})).toHaveValue('Local-only edit');
+ await page.getByRole('combobox',{name:'选择资料',exact:true}).selectOption(b.id);await expect(page.getByRole('combobox',{name:'选择资料',exact:true})).toHaveValue(b.id);await expect(page.getByRole('button',{name:'保存到云端',exact:true})).toBeEnabled();
+ await page.getByRole('combobox',{name:'选择资料',exact:true}).selectOption(a.id);await expect(page.getByRole('combobox',{name:'选择资料',exact:true})).toHaveValue(a.id);await page.locator('.editor-panel-heading').getByRole('button',{name:'English',exact:true}).click();await expect(page.getByLabel('姓名',{exact:true})).toHaveValue('Local-only edit');
  expect((await (await page.request.get(`/api/profiles/${a.id}`)).json()).profile.basics.name.en).toBe('Public Profile');
  await page.screenshot({path:'test-results/multiple-profiles.png',fullPage:true});
 });
