@@ -13,3 +13,11 @@ public/fonts/*Variable.ttf
 .openai/execution-profile.json
 .openai/pnpm
 .openai/metrics/
+
+.vite/
+.vinext/
+.next/
+.wrangler/
+.sites-runtime/
+next-env.d.ts
+outputs/

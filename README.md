@@ -1,74 +1,89 @@
+<div align="center">
+
 # Profile Up
 
-Build your academic website. Compose your curriculum vitae.
+### Academic website and curriculum vitae generation
 
-Profile Up 是个人学术网站与简历制作工作室。内容编辑服务于网站搭建和 CV 生成；模板按排版风格组织，不按自定义学科分组。
+个人学术网站与简历生成系统
 
-## 当前原型 v0.2
+[简体中文](README.zh-CN.md) · [Implementation](docs/development.md) · [Typography and classification sources](docs/references.md)
 
-- 三种网站风格：Classic、Structured、Editorial。
-- 六种 CV 排版：经典学术履历、紧凑排版、书卷衬线、传统衬线、居中简约、现代无衬线。
-- Word / TeX 参考布局筛选；所有 CV 都可导出 PDF、原生可编辑 DOCX 与 TeX 源项目。
-- 可单独切换中英文界面、内容编辑语言和输出语言；缺失译文回退到另一语言，不进行自动翻译。
-- 五种英文字体，以及思源宋体 / 思源黑体中文字体；字号、行距、纸张、颜色、照片和模块可配置。
-- 使用同一份虚构内容比较模板，示例预览不会覆盖草稿。
-- 可编辑基本信息、教育、任职、成果、项目、奖项、教学资源、动态、合作关系与链接。
-- 研究领域参考教育部 2022 年学科目录与 ACM CCS 的明确标注节选；提供官方来源、版本和中英标签，不将参考译名称为官方英文版。
-- 浏览器草稿保存、JSON 备份/恢复、模块排序与显示控制。
-- 静态网站 ZIP、PDF、DOCX、完整 TeX ZIP 和 JSON 备份导出。
+[![CI](https://github.com/rachael1216/profile-up/actions/workflows/ci.yml/badge.svg)](https://github.com/rachael1216/profile-up/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-304b38.svg)](LICENSE)
 
-这是一版**本地优先原型**。尚未接入账号、邮箱/机构认证、云端存储、自动 GitHub 发布、DOI/BibTeX 导入或视频上传。团队关系和外部链接均为用户填写，未经认证。JSON 完整备份包含隐藏信息；网站与 CV 导出经过输出过滤。
+</div>
 
-## 本地运行
+## Abstract
 
-需要 Node.js 22 或更新版本，以及 npm。
+Profile Up provides a common authoring interface for academic websites and curricula vitae. Users enter biographical information, education, appointments, publications, projects, teaching materials and related records in Chinese and English. The system renders these records as a personal website or a CV with configurable typography and section order. Website publication uses a separate snapshot containing the entries selected for display; cloud drafts retain the complete editable record. The implementation combines browser-based editing and document export with authenticated cloud storage and website publication.
 
-**本机再次打开：**双击项目文件夹里的 `启动 Profile Up.command`，或在项目目录运行 `npm run local:start`。启动器会检查并复用已有服务；服务在后台运行，关闭启动窗口后仍可访问。电脑重启后需要再次启动。
+## Current implementation
 
-`http://127.0.0.1:5173/` 是本机地址，依赖本地服务运行；GitHub 仓库用于保存代码，目前没有线上演示地址。浏览器若显示 `ERR_CONNECTION_REFUSED`，请先使用启动器恢复服务。日志位于 `.local/preview.log`。
+| Component | Implemented behaviour |
+|---|---|
+| Authoring | Bilingual records, portraits, external links, section ordering and visibility controls |
+| Website generation | Three visual styles; hosted personal pages at `/p/{slug}`; publication and withdrawal |
+| CV generation | Six layout styles; Latin and Chinese fonts; configurable size, spacing, paper and portrait |
+| Document export | Searchable PDF, editable DOCX, a XeLaTeX source project and a static website archive |
+| Cloud storage | Drafts indexed by the authenticated account, with revision checks on updates |
+| Recovery | Browser-local drafts and JSON import/export; local drafts are separated by account |
+
+Templates are organised by visual and typographic style. Research-area references are maintained separately and identify their classification source, version and translation status.
+
+## Architecture
+
+The editor is implemented in React and TypeScript. Vinext serves the application and API routes on Cloudflare Workers. Cloudflare D1 stores editable drafts and published website snapshots. Hosted identity is supplied by the Sites authentication service; write operations require an authenticated account and a matching request origin.
+
+The `projectProfile` function selects records for each output before rendering. Published pages use the website projection; CV exports use the CV projection. A cloud draft update increments its revision. An update based on an earlier revision is rejected, allowing the user to retain local work before loading the cloud record. A website is updated only when the user publishes again.
+
+## Use
+
+1. Sign in to the hosted workspace, or run the application locally.
+2. Enter information in the content editor. Chinese and English content can be edited independently.
+3. Select website and CV styles, typography and displayed sections.
+4. Save the draft to the cloud. Publish the website to obtain its address.
+5. Download the required CV or website files. A JSON backup preserves the full editable record.
+
+Publication makes the selected website content accessible according to the deployment's access policy. Withdrawing a page retains its cloud draft and publication record. Changing the website slug and publishing again retires the previous address.
+
+## Local installation
+
+Node.js 22.13 or later is required. Node.js 24 LTS is used for local development.
 
 ```bash
 git clone https://github.com/rachael1216/profile-up.git
 cd profile-up
 npm ci
-npm run local:start
+npm run build
+npm run db:local
+npm run dev
 ```
 
-打开 `http://127.0.0.1:5173/`。浏览器草稿属于该 origin；换浏览器或端口前请下载 JSON 备份。
+Open `http://127.0.0.1:5173/`. The local sign-in flow provides a development identity; it is excluded from production. Local and hosted databases are separate.
+
+On macOS, `启动 Profile Up.command` starts the local workspace in the background. It requires the dependencies and local database to have been prepared. After a computer restart, run the launcher again.
+
+## Verification
 
 ```bash
+npm run typecheck
 npm test
 npm run build
+npm run db:local
 npx playwright install chromium
 npm run test:e2e
 ```
 
-## 排版与导出
+The tests cover record validation, output filtering, escaping, document export and the cloud save/publish workflow. These are software checks. Comparative usability, accessibility audits and studies of CV quality remain future evaluation tasks.
 
-PDF 在浏览器中使用嵌入字体生成，文字可选择、搜索和复制。DOCX 使用原生段落、样式、超链接与可编辑文本。TeX 源项目包含主文件、所选字体、照片（如有）、文献元数据和构建说明，使用 XeLaTeX 编译。
+## Scope and limitations
 
-PDF、Word 和 TeX 使用不同排版引擎，分页和字形可能存在差异；网页中的 CV 预览用于展示版式，不是已编译 PDF 的逐像素预览。Word 引用常见系统字体，缺失时由阅读器回退；PDF / TeX 使用具备再分发许可的对应字体。Times/Arial/Palatino 风格分别使用 TeX Gyre Termes/Heros/Pagella，不把它们宣称为微软字体本体。
+This repository contains a research prototype. Institutional email verification, external account ownership verification, automatic publication import, custom domains and collaborative editing are under development. Cloud submissions are limited to 900 KB per draft; portraits are resized in the browser. Course videos are represented by external links.
 
-网页 ZIP 包含 `index.html` 与 `fonts/`，发布时必须一起上传。Profile Up 应用本身的 GitHub 仓库同步，与每个用户的网站自动发布是两个功能；后者尚未接入。
+PDF, Word and XeLaTeX use different layout engines. The browser preview illustrates the selected style; pagination and glyph appearance can differ in exported documents. Word resolves font names using the reader's installed fonts. The other exports embed or package redistributable fonts. Font sources and licences are documented in [references](docs/references.md).
 
-## 目录
+No user study or benchmark result is reported for this version. Demonstration records describe fictional people and work.
 
-```text
-src/App.tsx                 编辑器、网站与 CV 工作室
-src/lib/model.ts            数据模型、校验、输出过滤
-src/lib/catalog.ts          风格、字体、学科参考目录
-src/lib/render.ts           静态网页与 CV 预览
-src/lib/exports.ts          PDF、TeX、网页 ZIP 和备份
-src/lib/docx.ts             原生 Word 导出
-src/lib/i18n.ts             中英文界面
-src/components/DisciplinePicker.tsx
-public/fonts/               可再分发字体与许可证
-tests/                      数据与浏览器回归测试
-docs/                       开发与来源说明
-```
+## Licence
 
-## 后续重点
-
-完善分页与预览一致性、内容导入、学科参考完整性、账号和持久存储，然后接入 GitHub 授权发布。模板风格独立于学科分类。研究与投稿计划应围绕网页搭建和简历制作的实际效果展开。
-
-项目代码采用 MIT；字体分别采用目录内附带的 SIL OFL / GUST 许可证。
+Application code is distributed under the [MIT licence](LICENSE). Fonts and vendored components retain their accompanying licences.

@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const address = 'http://127.0.0.1:5173/';
-const vite = join(root, 'node_modules/vite/bin/vite.js');
+const vite = join(root, 'node_modules/vinext/dist/cli.js');
+const framework = join(root, 'scripts/run-framework.mjs');
 const stateDir = join(root, '.local');
 const logPath = join(stateDir, 'preview.log');
 
@@ -32,7 +33,7 @@ async function start() {
   const log = openSync(logPath, 'a');
   let child;
   try {
-    child = spawn(process.execPath, [vite, '--host', '127.0.0.1', '--port', '5173', '--strictPort'], {
+    child = spawn(process.execPath, [framework, 'dev', '--hostname', '127.0.0.1', '--port', '5173'], {
       cwd: root, detached: true, stdio: ['ignore', log, log]
     });
   } finally {

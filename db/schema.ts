@@ -1,0 +1,3 @@
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+export const drafts = sqliteTable('drafts', { userId: text('user_id').primaryKey(), document: text('document_json').notNull(), revision: integer('revision').notNull().default(1), updatedAt: text('updated_at').notNull() });
+export const publishedSites = sqliteTable('published_sites', { slug: text('slug').primaryKey(), userId: text('user_id').notNull().unique(), document: text('document_json').notNull(), revision: integer('revision').notNull(), published: integer('published').notNull().default(1), updatedAt: text('updated_at').notNull() });
