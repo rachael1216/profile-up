@@ -6,7 +6,7 @@
 
 个人学术网站与简历生成系统
 
-[简体中文](README.zh-CN.md) · [Implementation](docs/development.md) · [Typography and classification sources](docs/references.md)
+[Hosted workspace](https://profile-up-studio.beigemelon7.chatgpt.site) · [简体中文](README.zh-CN.md) · [Implementation](docs/development.md) · [Typography and classification sources](docs/references.md)
 
 [![CI](https://github.com/rachael1216/profile-up/actions/workflows/ci.yml/badge.svg)](https://github.com/rachael1216/profile-up/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-304b38.svg)](LICENSE)
@@ -16,6 +16,8 @@
 ## Abstract
 
 Profile Up provides a common authoring interface for academic websites and curricula vitae. Users enter biographical information, education, appointments, publications, projects, teaching materials and related records in Chinese and English. The system renders these records as a personal website or a CV with configurable typography and section order. Website publication uses a separate snapshot containing the entries selected for display; cloud drafts retain the complete editable record. The implementation combines browser-based editing and document export with authenticated cloud storage and website publication.
+
+The current hosted deployment is restricted to the project owner. Website publication follows this deployment access policy.
 
 ## Current implementation
 
