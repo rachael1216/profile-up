@@ -5,6 +5,7 @@ declare namespace Cloudflare {
     AUTH_EMAIL_ENABLED?:string;
     AUTH_SMS_ENABLED?:string;
     AUTH_SMS_DAILY_LIMIT?:string;
+    AUTH_DEMO_PASSWORD_ENABLED?:string;
     TURNSTILE_SITE_KEY?:string;
     ASSETS: Fetcher;
     DB?: D1Database;

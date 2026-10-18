@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 export const drafts = sqliteTable('drafts', { userId: text('user_id').primaryKey(), document: text('document_json').notNull(), revision: integer('revision').notNull().default(1), updatedAt: text('updated_at').notNull() });
 export const publishedSites = sqliteTable('published_sites', { slug: text('slug').primaryKey(), userId: text('user_id').notNull().unique(), document: text('document_json').notNull(), revision: integer('revision').notNull(), published: integer('published').notNull().default(1), updatedAt: text('updated_at').notNull() });
 
@@ -13,3 +13,6 @@ export const authUsers = sqliteTable('auth_users', { id:text('id').primaryKey(),
 export const authSessions = sqliteTable('auth_sessions', { tokenHash:text('token_hash').primaryKey(), userId:text('user_id').notNull(), createdAt:integer('created_at').notNull(), expiresAt:integer('expires_at').notNull() },t=>[index('sessions_user').on(t.userId),index('sessions_expiry').on(t.expiresAt)]);
 export const authChallenges = sqliteTable('auth_challenges', { id:text('id').primaryKey(), browserHash:text('browser_hash').notNull(), channel:text('channel').notNull(), contact:text('contact').notNull(), attempts:integer('attempts').notNull().default(0), expiresAt:integer('expires_at').notNull(), used:integer('used').notNull().default(0) },t=>[index('challenges_expiry').on(t.expiresAt)]);
 export const authLimits = sqliteTable('auth_limits', { key:text('key').primaryKey(), count:integer('count').notNull(), expiresAt:integer('expires_at').notNull() },t=>[index('limits_expiry').on(t.expiresAt)]);
+
+// Demo identifiers have no verified ownership and remain separate from OTP identities.
+export const demoCredentials = sqliteTable('demo_credentials', {userId:text('user_id').primaryKey(),channel:text('channel').notNull(),contact:text('contact').notNull(),passwordHash:text('password_hash').notNull(),createdAt:text('created_at').notNull()},t=>[uniqueIndex('demo_contact_unique').on(t.channel,t.contact)]);

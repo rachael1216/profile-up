@@ -2,19 +2,41 @@ import {test,expect} from '@playwright/test';
 import {randomBytes} from 'node:crypto';
 import {signInFixture} from './auth-fixtures';
 const origin='http://127.0.0.1:5173';
-test('public demo has honest OTP availability and a neutral interface',async({page,request})=>{
- const config=await request.get('/api/auth/config');expect(config.status()).toBe(200);expect(await config.json()).toMatchObject({email:false,sms:false,demo:true});
+test('public demo offers password registration and a neutral interface',async({page,request})=>{
+ const config=await request.get('/api/auth/config');expect(config.status()).toBe(200);expect(await config.json()).toMatchObject({email:false,sms:false,passwordDemo:true,demo:true});
  await page.goto('/');await expect(page.getByRole('button',{name:/ChatGPT/})).toHaveCount(0);await expect(page.getByRole('link',{name:'邮箱 / 手机号注册或登录',exact:true})).toBeVisible();
  expect(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
- await page.getByRole('link',{name:'邮箱 / 手机号注册或登录',exact:true}).click();await expect(page.getByRole('heading',{name:'注册或登录',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'获取验证码',exact:true})).toBeDisabled();
- await expect(page.getByText('邮箱验证码暂未开通。',{exact:false})).toBeVisible();await page.getByRole('button',{name:'短信验证码',exact:true}).click();await expect(page.getByLabel('手机号（含国家区号）')).toBeVisible();
- await expect(page.getByText('短信验证码暂未开通。',{exact:false})).toBeVisible();await page.getByRole('button',{name:'English',exact:true}).click();await expect(page.getByRole('heading',{name:'Register or sign in',exact:true})).toBeVisible();
+ await page.getByRole('link',{name:'邮箱 / 手机号注册或登录',exact:true}).click();await expect(page.getByRole('heading',{name:'创建账号',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'注册并进入工作室',exact:true})).toBeEnabled();
+ await expect(page.getByText('演示阶段无需验证码。',{exact:false})).toBeVisible();await page.getByLabel('账号类型',{exact:true}).selectOption('sms');await expect(page.getByLabel('手机号（含国家区号）')).toBeVisible();
+ await page.getByRole('button',{name:'English',exact:true}).click();await expect(page.getByRole('heading',{name:'Create an account',exact:true})).toBeVisible();
  await page.screenshot({path:'test-results/account-page.png',fullPage:true});
  const noService=await request.post('/api/auth/send',{headers:{Origin:origin},data:{channel:'sms',contact:'+8613800000000'}});expect(noService.status()).toBe(503);expect(noService.headers()['set-cookie']).toBeUndefined();
  expect((await request.post('/api/auth/send',{headers:{Origin:'https://other.test'},data:{channel:'email',contact:'person@example.org'}})).status()).toBe(403);
  expect((await request.get('/api/profiles',{headers:{Cookie:'__sites_local_auth=1'}})).status()).toBe(401);
  expect((await request.post('/api/auth/verify',{headers:{Origin:origin},data:{challengeId:'none',code:'000000'}})).status()).toBe(400);
  expect((await request.get('/api/profiles',{headers:{Cookie:'profileup-session=forged; __sites_local_auth=1'}})).status()).toBe(401);
+});
+test('registered email and phone accounts retain cloud profiles across fresh browser sessions',async({page,browser})=>{
+ const suffix=randomBytes(6).toString('hex'),email=`demo-${suffix}@example.org`,password='Archive access 2026!';
+ await page.context().setExtraHTTPHeaders({'CF-Connecting-IP':`test-${suffix}`});
+ await page.goto('/account');await page.getByLabel('邮箱',{exact:true}).fill(email);await page.getByLabel('密码',{exact:true}).fill(password);await page.getByLabel('确认密码',{exact:true}).fill(password);
+ await page.getByRole('button',{name:'注册并进入工作室',exact:true}).click();await expect(page.getByRole('button',{name:'新建资料',exact:true})).toBeVisible();
+ const created=await page.request.post('/api/profiles',{headers:{Origin:origin},data:{label:'Persistent draft'}});expect(created.status()).toBe(201);const profile=await created.json();
+ const loaded=await (await page.request.get(`/api/profiles/${profile.id}`)).json();loaded.profile.basics.name.en='Saved demo researcher';
+ expect((await page.request.put(`/api/profiles/${profile.id}`,{headers:{Origin:origin},data:{profile:loaded.profile,revision:1}})).status()).toBe(200);
+ const duplicate=await page.request.post('/api/auth/register',{headers:{Origin:origin},data:{channel:'email',contact:email.toUpperCase(),password:'Another password 2026!'}});expect(duplicate.status()).toBe(409);
+ expect((await page.request.post('/api/auth/signout',{headers:{Origin:origin}})).status()).toBe(200);expect((await page.request.get('/api/profiles')).status()).toBe(401);
+ const fresh=await browser.newContext({extraHTTPHeaders:{'CF-Connecting-IP':`test-login-${suffix}`}}),login=await fresh.newPage();await login.goto('/account');await login.getByRole('button',{name:'登录',exact:true}).click();
+ await login.getByLabel('邮箱',{exact:true}).fill(email);await login.getByLabel('密码',{exact:true}).fill(password+'wrong');await login.getByRole('button',{name:'登录工作室',exact:true}).click();await expect(login.getByRole('alert')).toContainText('账号或密码不正确');
+ await login.getByLabel('密码',{exact:true}).fill(password);await login.getByRole('button',{name:'登录工作室',exact:true}).click();await expect(login.getByRole('button',{name:'新建资料',exact:true})).toBeVisible();
+ const retained=await fresh.request.get(`/api/profiles/${profile.id}`);expect(retained.status()).toBe(200);expect((await retained.json()).profile.basics.name.en).toBe('Saved demo researcher');
+ const phone=await browser.newContext({extraHTTPHeaders:{'CF-Connecting-IP':`test-phone-${suffix}`}}),number='+8613'+String(parseInt(suffix,16)).slice(-9).padStart(9,'0');
+ const registered=await phone.request.post('/api/auth/register',{headers:{Origin:origin},data:{channel:'sms',contact:number,password}});expect(registered.status()).toBe(200);expect(await registered.json()).toMatchObject({verified:false});
+ expect((await phone.request.get(`/api/profiles/${profile.id}`)).status()).toBe(404);
+ expect((await phone.request.post('/api/auth/signout',{headers:{Origin:origin}})).status()).toBe(200);
+ expect((await phone.request.post('/api/auth/login',{headers:{Origin:origin},data:{channel:'sms',contact:number.slice(3),password}})).status()).toBe(200);
+ expect((await phone.request.post('/api/auth/register',{headers:{Origin:'https://forged.test'},data:{channel:'email',contact:email,password}})).status()).toBe(403);
+ await fresh.close();await phone.close();
 });
 test('native session reads are isolated and signout revokes the cookie',async({browser})=>{
  // Insert only session fixtures in local D1; production has no fake verification path.

@@ -4,11 +4,13 @@ import {database} from './database';
 import {ApiError,checkOrigin,readJSON} from './request-validation';
 import {authCookie,authCookieName,cookieValue,configuredSettings,digest,maskContact,normalizeContact,randomToken,type AuthChannel} from './auth-contract';
 import {otpProvider} from './otp-provider';
-export type AppUser={id:string;name:string;provider:'otp'};
+import {dummyPasswordHash,hashPassword,validPassword,verifyPassword} from './password';
+export type AppUser={id:string;name:string;provider:'otp'|'password-demo';verified:boolean};
 const SESSION_SECONDS=8*60*60,CHALLENGE_SECONDS=10*60;
 function settings(){return configuredSettings({url:env.SUPABASE_URL,key:env.SUPABASE_PUBLISHABLE_KEY,emailEnabled:env.AUTH_EMAIL_ENABLED,smsEnabled:env.AUTH_SMS_ENABLED,captchaSiteKey:env.TURNSTILE_SITE_KEY});}
 function enabled(channel:AuthChannel){const config=settings();if(!(channel==='email'?config.email:config.sms)||!config.origin||!config.key)throw new ApiError(503,channel==='email'?'邮箱验证码暂未开通，可先免注册体验。':'短信验证码暂未开通，可先免注册体验。');return config;}
-export function authConfiguration(){const config=settings();return Response.json({email:config.email,sms:config.sms,captchaSiteKey:config.captchaSiteKey,demo:true},{headers:{'Cache-Control':'no-store'}});}
+function demoEnabled(){return env.AUTH_DEMO_PASSWORD_ENABLED==='true'||(import.meta.env.DEV&&env.AUTH_DEMO_PASSWORD_ENABLED!=='false');}
+export function authConfiguration(){const config=settings();return Response.json({email:config.email,sms:config.sms,passwordDemo:demoEnabled(),captchaSiteKey:config.captchaSiteKey,demo:true},{headers:{'Cache-Control':'no-store'}});}
 async function limit(key:string,max:number,period:number){
  const now=Math.floor(Date.now()/1000),bucket=await digest(`${key}:${Math.floor(now/period)}`);
  const result=await database().prepare('INSERT INTO auth_limits(key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 WHERE count<?').bind(bucket,now+period*2,max).run();
@@ -21,10 +23,38 @@ export async function getAppUser():Promise<AppUser|null>{
  const name=authCookieName('session',!local),token=cookieValue(raw,name),present=(raw??'').split(';').some(part=>part.trim().startsWith(name+'='));
  if(present){
   if(!token||!/^[a-f0-9]{64}$/.test(token))return null;
-  const row=await database().prepare('SELECT u.id,u.contact FROM auth_sessions s JOIN auth_users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?').bind(await digest(token),Math.floor(Date.now()/1000)).first<{id:string;contact:string}>();
-  return row?{id:row.id,name:maskContact(row.contact),provider:'otp'}:null;
+  const row=await database().prepare("SELECT s.user_id AS id,COALESCE(u.contact,d.contact) AS contact,CASE WHEN u.id IS NOT NULL THEN 'otp' ELSE 'password-demo' END AS provider FROM auth_sessions s LEFT JOIN auth_users u ON u.id=s.user_id LEFT JOIN demo_credentials d ON d.user_id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND (u.id IS NOT NULL OR d.user_id IS NOT NULL)").bind(await digest(token),Math.floor(Date.now()/1000)).first<{id:string;contact:string;provider:'otp'|'password-demo'}>();
+  return row?{id:row.id,name:maskContact(row.contact),provider:row.provider,verified:row.provider==='otp'}:null;
  }
  return null;
+}
+async function passwordSession(request:Request,id:string){
+ const token=randomToken(),now=Math.floor(Date.now()/1000),created=new Date().toISOString(),db=database();
+ await db.batch([
+  db.prepare('INSERT OR IGNORE INTO accounts(id,created_at) VALUES (?,?)').bind(id,created),
+  db.prepare('INSERT INTO auth_sessions(token_hash,user_id,created_at,expires_at) VALUES (?,?,?,?)').bind(await digest(token),id,now,now+SESSION_SECONDS),
+  db.prepare('DELETE FROM auth_sessions WHERE expires_at<?').bind(now),
+  db.prepare('DELETE FROM auth_limits WHERE expires_at<?').bind(now)
+ ]);
+ const old=browserToken(request,'session');if(old)await db.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(await digest(old)).run();
+ return Response.json({redirect:'/',verified:false},{headers:{'Cache-Control':'no-store','Set-Cookie':authCookie('session',token,SESSION_SECONDS,new URL(request.url).protocol==='https:')}});
+}
+export async function passwordAccount(request:Request,action:'register'|'login'){
+ checkOrigin(request);if(!demoEnabled())throw new ApiError(503,'演示账号暂未开放。');
+ const body=await readJSON(request,8192),contact=normalizeContact(body.channel,body.contact),password=validPassword(body.password),ip=request.headers.get('CF-Connecting-IP')??'loopback';
+ await limit(`password:${action}:ip:${ip}`,action==='register'?5:30,action==='register'?3600:600);
+ await limit(`password:${action}:contact:${contact.channel}:${contact.destination}`,action==='register'?3:10,600);
+ if(action==='register'){
+  await limit('password:register:global',100,86400);
+  const id=`demo_${crypto.randomUUID()}`,hash=await hashPassword(password);
+  const result=await database().prepare('INSERT INTO demo_credentials(user_id,channel,contact,password_hash,created_at) VALUES (?,?,?,?,?) ON CONFLICT(channel,contact) DO NOTHING').bind(id,contact.channel,contact.destination,hash,new Date().toISOString()).run();
+  if(!result.meta.changes)throw new ApiError(409,'此邮箱或手机号已注册，请登录。');
+  return passwordSession(request,id);
+ }
+ const row=await database().prepare('SELECT user_id,password_hash FROM demo_credentials WHERE channel=? AND contact=?').bind(contact.channel,contact.destination).first<{user_id:string;password_hash:string}>();
+ const correct=await verifyPassword(password,row?.password_hash??dummyPasswordHash);
+ if(!row||!correct)throw new ApiError(401,'账号或密码不正确。');
+ return passwordSession(request,row.user_id);
 }
 export async function sendOtp(request:Request){
  checkOrigin(request);const body=await readJSON(request,8192),contact=normalizeContact(body.channel,body.contact),config=enabled(contact.channel);

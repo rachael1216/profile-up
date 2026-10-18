@@ -2,7 +2,7 @@
 
 ## Product flow
 
-The public workspace serves two outputs: personal academic websites and academic CVs. Product accounts use independent email and phone verification through Supabase Auth and application sessions; delivery activation is tracked separately in `authentication.md`. Creating the first profile records its account association. Users can create, rename on save, copy and switch among up to 30 profiles. Copying uses the saved cloud record and does not copy attachments or publication state. Existing version 0.3 cloud drafts can be imported explicitly; their original records remain intact.
+The public workspace serves two outputs: personal academic websites and academic CVs. The demo uses email or phone identifiers with password registration and host-bound application sessions. Identifier ownership is explicitly unverified. Verified email/SMS flows through Supabase Auth are retained for later sender activation; both modes are described in `authentication.md`. Creating the first profile records its account association. Users can create, rename on save, copy and switch among up to 30 profiles. Copying uses the saved cloud record and does not copy attachments or publication state. Existing version 0.3 cloud drafts can be imported explicitly; their original records remain intact.
 
 Each profile contains bilingual content, website settings, CV settings and the identifiers of files selected for website publication. Local storage keys contain both account and profile IDs. Switching profiles mounts a separate editor and preserves the previous local draft. Cloud saves are explicit. Loading a cloud version retains an option to restore the preceding local edit.
 

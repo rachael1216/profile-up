@@ -1,6 +1,6 @@
 {
   "name": "profile-up",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
     "db:local": "node scripts/migrate-local.mjs",
-    "verify:tex": "tsx scripts/verify-tex.mts"
+    "verify:tex": "tsx scripts/verify-tex.mts",
+    "deploy:gateway": "wrangler deploy --config gateway/wrangler.jsonc"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

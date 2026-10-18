@@ -1,0 +1,10 @@
+{
+  "name": "profileup",
+  "main": "worker.ts",
+  "compatibility_date": "2026-10-18",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "UPSTREAM_ORIGIN": "https://profile-up-studio.beigemelon7.chatgpt.site"
+  }
+}
