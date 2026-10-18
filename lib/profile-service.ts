@@ -1,10 +1,10 @@
-import { env } from 'cloudflare:workers';
-import { getChatGPTUser } from '../app/chatgpt-auth';
+import { getAppUser } from './auth-service';
+import { database } from './database';
+export { database } from './database';
 import { parseBackup, projectProfile, localized } from '../src/lib/model';
 import { readJSON, ApiError, jsonError, checkOrigin } from './request-validation';
 export { ApiError, jsonError };
-export function database() { if (!env.DB) throw new ApiError(503, '云端数据库尚未连接。'); return env.DB; }
-export async function identity() { const user = await getChatGPTUser(); if (!user) throw new ApiError(401, '请先登录，再保存或发布。'); return user.userId; }
+export async function identity() { const user = await getAppUser(); if (!user) throw new ApiError(401, '请先登录，再保存或发布。'); return user.id; }
 type Draft = { document_json: string; revision: number; updated_at: string };
 export async function getDraft(userId: string) { return database().prepare('SELECT document_json, revision, updated_at FROM drafts WHERE user_id = ?').bind(userId).first<Draft>(); }
 export async function readDraft() { const row = await getDraft(await identity()); return Response.json({ profile: row ? JSON.parse(row.document_json) : null, revision: row?.revision ?? 0, updatedAt: row?.updated_at ?? null }, { headers: { 'Cache-Control': 'private, no-store' } }); }

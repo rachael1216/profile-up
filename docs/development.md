@@ -2,7 +2,7 @@
 
 ## Product flow
 
-The public workspace serves two outputs: personal academic websites and academic CVs. Signing in with ChatGPT supplies a stable Site-scoped identity. Creating the first profile records its account association. Users can create, rename on save, copy and switch among up to 30 profiles. Copying uses the saved cloud record and does not copy attachments or publication state. Existing version 0.3 cloud drafts can be imported explicitly; their original records remain intact.
+The public workspace serves two outputs: personal academic websites and academic CVs. Product accounts use independent email and phone verification through Supabase Auth and application sessions; delivery activation is tracked separately in `authentication.md`. Creating the first profile records its account association. Users can create, rename on save, copy and switch among up to 30 profiles. Copying uses the saved cloud record and does not copy attachments or publication state. Existing version 0.3 cloud drafts can be imported explicitly; their original records remain intact.
 
 Each profile contains bilingual content, website settings, CV settings and the identifiers of files selected for website publication. Local storage keys contain both account and profile IDs. Switching profiles mounts a separate editor and preserves the previous local draft. Cloud saves are explicit. Loading a cloud version retains an option to restore the preceding local edit.
 
@@ -54,6 +54,10 @@ At publication, the server independently verifies every selected file belongs to
 
 `.openai/hosting.json` binds D1 as `DB` and R2 as `BUCKET`. The Cloudflare assets binding serves the pinned compiler and package files. The large unmodified ICU data file is stored in two static parts, each below the static-asset size limit; a read-only route streams them back in order with the original byte length.
 
-Local sign-in simulation is restricted to loopback development and excluded from production. End-to-end tests use real local D1 and R2, separate anonymous and authenticated browser contexts, and a second development identity for ownership-denial checks. No real user documents are used in tests. Type checks, validation tests, browser workflows and actual TeX compilation are separate checks. They do not establish usability, accessibility conformance or publication-quality CV effectiveness.
+Local sign-in simulation is restricted to loopback development and excluded from production. End-to-end tests use real local D1 and R2, separate anonymous and authenticated browser contexts, and a second independent-session fixture for ownership-denial checks. No real user documents are used in tests. Type checks, validation tests, browser workflows and actual TeX compilation are separate checks. They do not establish usability, accessibility conformance or publication-quality CV effectiveness.
 
 Source, migrations, tests and documentation are retained in the original GitHub repository. Runtime credentials, local databases and generated test files are excluded. The deployed Site source is synchronised from the exact packaged commit.
+
+## Interface revision (v0.5)
+
+The workspace uses a white and grey palette and plain operational copy. Research interests are free text. Discipline selection and the separate ACM entry were removed; the optional writing reference links to the official MOE catalogue. Legacy `fieldIds` remain readable in old backups but no longer control the editor. Website and CV visual templates remain independent of disciplines.

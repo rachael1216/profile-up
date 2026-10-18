@@ -21,3 +21,6 @@ public/fonts/*Variable.ttf
 .sites-runtime/
 next-env.d.ts
 outputs/
+
+.dev.vars
+.dev.vars.*

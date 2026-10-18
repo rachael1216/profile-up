@@ -17,7 +17,7 @@
 
 Profile Up provides a common authoring interface for academic websites and curricula vitae. Users enter biographical information, education, appointments, publications, projects, teaching materials and related records in Chinese and English. The system renders these records as a personal website or a CV with configurable typography and section order. Website publication uses a separate snapshot containing the entries selected for display; cloud drafts retain the complete editable record. The implementation combines browser-based editing and document export with authenticated cloud storage and website publication.
 
-The hosted workspace and published personal pages are publicly accessible. Editing, cloud records and private files require sign-in with ChatGPT. The first profile creates an application account associated with the identity provider; Profile Up does not store passwords.
+The hosted workspace is a public demo. Anonymous visitors can edit and export websites and CVs. Cloud records, files and publication require sign-in. The implementation now includes independent email/SMS verification through Supabase Auth; live delivery is pending provider setup. The product no longer offers or consumes ChatGPT sign-in. [Activation requirements](docs/activation.zh-CN.md) and [authentication design](docs/authentication.md) describe the current state.
 
 ## Current implementation
 
@@ -31,17 +31,17 @@ The hosted workspace and published personal pages are publicly accessible. Editi
 | PDF library | Certificates, publications and lecture notes; private downloads and explicit per-website publication |
 | Recovery | Browser-local drafts and JSON import/export; local drafts are separated by account and profile |
 
-Templates are organised by visual and typographic style. Research-area references are maintained separately and identify their classification source, version and translation status.
+Templates are organised by visual and typographic style. Research interests are free text, with an optional link to an official catalogue. The editor does not require a discipline selection or present an ACM-specific entry.
 
 ## Architecture
 
-The editor is implemented in React and TypeScript. Vinext serves the application and API routes on Cloudflare Workers. Cloudflare D1 stores named profiles, attachment metadata and published website snapshots. Cloudflare R2 stores PDF files. The XeLaTeX and dvipdfmx engines run in browser Web Workers; the deployment serves a pinned engine release and a fixed TeX Live package subset. Hosted identity is supplied by the Sites authentication service; write operations require an authenticated account and a matching request origin.
+The editor is implemented in React and TypeScript. Vinext serves the application and API routes on Cloudflare Workers. Cloudflare D1 stores named profiles, attachment metadata and published website snapshots. Cloudflare R2 stores PDF files. The XeLaTeX and dvipdfmx engines run in browser Web Workers; the deployment serves a pinned engine release and a fixed TeX Live package subset. Product identity is established through verified email/SMS accounts; write operations require an authenticated account and a matching request origin.
 
 The `projectProfile` function selects records for each output before rendering. Published pages use the website projection; CV exports use the CV projection. A cloud draft update increments its revision. An update based on an earlier revision is rejected, allowing the user to retain local work before loading the cloud record. A website is updated only when the user publishes again.
 
 ## Use
 
-1. Sign in with ChatGPT and create a named profile. Additional profiles can be created or copied from a saved profile.
+1. Try editing and exports without registering. Once a delivery channel is activated, verify an email or phone number and create a named cloud profile. Additional profiles can be created or copied from a saved profile.
 2. Enter information in the content editor. Chinese and English content can be edited independently.
 3. Upload PDF files as needed. Files are private until explicitly selected for website publication.
 4. Select the website name, visual style and displayed sections; select CV typography and sections independently.
@@ -63,7 +63,7 @@ npm run db:local
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/`. The local sign-in flow provides a development identity; it is excluded from production. Local and hosted databases are separate.
+Open `http://127.0.0.1:5173/`. The local application uses the same independent-session checks. Test identities exist only as explicit fixtures in local D1; there is no UI login bypass. Local and hosted databases are separate.
 
 On macOS, `启动 Profile Up.command` starts the local workspace in the background. It requires the dependencies and local database to have been prepared. After a computer restart, run the launcher again.
 
@@ -82,7 +82,7 @@ The tests cover record validation, output filtering, escaping, document export a
 
 ## Scope and limitations
 
-This repository contains a research prototype. Institutional email verification, external account ownership verification, automatic publication import, custom domains and collaborative editing are under development. Cloud submissions are limited to 900 KB per draft; portraits are resized in the browser. Each account can keep 30 profiles and 100 MB of PDFs, with 50 files per profile and 10 MB per file. Course videos are represented by external links. The current identity provider is ChatGPT; independent email/password registration is not implemented.
+This repository contains a research prototype. Institutional email verification, external account ownership verification, automatic publication import, custom domains and collaborative editing are under development. Cloud submissions are limited to 900 KB per draft; portraits are resized in the browser. Each account can keep 30 profiles and 100 MB of PDFs, with 50 files per profile and 10 MB per file. Course videos are represented by external links. Email and SMS registration use real one-time codes, with no password required. Their public delivery services have not yet been activated.
 
 The PDF is compiled from the same TeX source provided in the source download. Browser and Word previews use their own layout engines; their pagination can differ from the compiled PDF. The first TeX compilation downloads engine and font assets from this website; subsequent visits can use the browser cache. Word resolves font names using the reader's installed fonts. The other exports embed or package redistributable fonts. Font sources and licences are documented in [references](docs/references.md).
 

@@ -1,8 +1,9 @@
 import {test,expect} from '@playwright/test';
+import {signInFixture} from './auth-fixtures';
 import {demoProfile} from '../../src/lib/model';
 const origin='http://127.0.0.1:5173',headers={Origin:origin};
 test('profiles, PDF ownership, public snapshots and withdrawal',async({page,browser})=>{
- await page.goto('/signin-with-chatgpt?return_to=/');
+ await signInFixture(page.context());await page.goto('/');
  const label=`Test ${Date.now()}`;
  const created=await page.request.post('/api/profiles',{headers,data:{label}});expect(created.status()).toBe(201);const a=await created.json();
  const second=await page.request.post('/api/profiles',{headers,data:{label:label+' second'}});expect(second.status()).toBe(201);const b=await second.json();
@@ -15,7 +16,7 @@ test('profiles, PDF ownership, public snapshots and withdrawal',async({page,brow
  let saved=await page.request.put(`/api/profiles/${a.id}`,{headers,data:{profile:draft,revision:1}});expect(saved.status()).toBe(200);
  expect((await page.request.put(`/api/profiles/${a.id}`,{headers,data:{profile:draft,revision:1}})).status()).toBe(409);
  expect((await page.request.post(`/api/profiles/${a.id}/site`,{headers,data:{revision:2}})).status()).toBe(200);
- const otherAccount=await browser.newContext();await otherAccount.addCookies([{name:'__sites_local_auth',value:'2',url:origin}]);
+ const otherAccount=await browser.newContext();await signInFixture(otherAccount);
  expect((await otherAccount.request.get('/api/profiles')).status()).toBe(200);
  for(const path of [`/api/profiles/${a.id}`,`/api/profiles/${a.id}/files`,`/api/profiles/${a.id}/site`,`/api/files/${file.id}`])expect((await otherAccount.request.get(path)).status()).toBe(404);
  expect((await otherAccount.request.put(`/api/profiles/${a.id}`,{headers,data:{profile:draft,revision:2}})).status()).toBe(404);

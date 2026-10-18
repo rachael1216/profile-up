@@ -24,3 +24,7 @@ Original Noto sources:
 - https://github.com/google/fonts/tree/main/ofl/notoserifsc
 
 DOCX references Times New Roman, Palatino Linotype, Arial or the selected open font by name, without embedding proprietary system fonts. Reader fallback depends on installed fonts. PDF and TeX embed or package the named redistributable alternatives.
+
+## Interface scope (v0.5)
+
+The current editor does not offer discipline selection or an ACM-specific taxonomy. Research interests are free text. The official catalogue link is an optional writing reference. Earlier taxonomy references in project history do not determine website or CV templates.

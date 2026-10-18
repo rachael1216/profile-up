@@ -25,7 +25,7 @@ test('website ZIP excludes hidden publications', async ({ page }) => {
   const download = await event;
   const zip = await JSZip.loadAsync(await readFile((await download.path())!));
   const html = await zip.file('index.html')!.async('string');
-  expect(html).not.toContain('Designing Human');
+  expect(html).not.toContain('Example publication A');
   expect(html).not.toContain('PRIVATE');
   expect(html).toContain('Lin Chen');
 });
@@ -97,7 +97,7 @@ test('layout demos preserve drafts and bilingual interface and Word export work'
   await expect(page.getByRole('button',{name:/Editorial Serif Word/})).toBeVisible();
   await page.screenshot({path:'test-results/cv-studio-english.png',fullPage:true});
 });
-test('all academic font choices generate PDFs and official discipline references are selectable', async ({ page }) => {
+test('all font choices generate PDFs and research interests are free text', async ({ page }) => {
   await page.goto('/#cv');
   await page.getByRole('button',{name:'中文',exact:true}).click();
   for(const family of ['termes','pagella','garamond','modern','heros']){
@@ -108,9 +108,10 @@ test('all academic font choices generate PDFs and official discipline references
     expect((await readFile((await file.path())!)).subarray(0,5).toString()).toBe('%PDF-');
   }
   await page.getByRole('button',{name:'编辑内容',exact:false}).first().click();
-  await page.getByRole('textbox',{name:'搜索研究领域'}).fill('0402');
-  const term=page.getByRole('button',{name:'心理学 Psychology 0402',exact:true});
-  await expect(term).toBeVisible(); await term.click();
-  await page.getByRole('button',{name:'将所选领域填入中英研究兴趣'}).click();
-  await expect(page.getByLabel('研究兴趣',{exact:true})).toHaveValue(/心理学/);
+  await expect(page.getByRole('textbox',{name:'搜索研究领域'})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'ACM CCS',exact:true})).toHaveCount(0);
+  await page.getByLabel('研究兴趣',{exact:true}).fill('自定义研究问题');
+  await expect(page.getByLabel('研究兴趣',{exact:true})).toHaveValue('自定义研究问题');
+  await page.getByText('研究兴趣：填写参考（可选）',{exact:true}).click();
+  await expect(page.getByRole('link',{name:'教育部学科目录（仅供参考）',exact:true})).toBeVisible();
 });

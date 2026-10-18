@@ -22,6 +22,13 @@
       "when": 1792327869332,
       "tag": "0002_uneven_the_spike",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792329078709,
+      "tag": "0003_clumsy_micromax",
+      "breakpoints": true
     }
   ]
 }

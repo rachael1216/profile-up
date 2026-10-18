@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import {signInFixture} from './auth-fixtures';
 import { demoProfile } from '../../src/lib/model';
 const origin='http://127.0.0.1:5173';
 test('anonymous visitors cannot access drafts or forge a hosted identity', async ({request})=>{
@@ -6,7 +7,7 @@ test('anonymous visitors cannot access drafts or forge a hosted identity', async
   expect((await request.get('/api/draft',{headers:{'oai-authenticated-user-id':'forged','oai-authenticated-user-email':'forged@example.org'}})).status()).toBe(401);
 });
 test('cloud drafts persist; publication filters private content and can be withdrawn', async ({page})=>{
-  await page.goto('/signin-with-chatgpt?return_to=/');
+  await signInFixture(page.context());await page.goto('/');
   await expect(page.getByRole('button',{name:'新建资料',exact:true})).toBeEnabled();
   const draft=structuredClone(demoProfile);draft.settings.slug='cloud-workflow-test';
   draft.basics.name.en='Cloud Workflow Example'; draft.basics.email='PRIVATE_EMAIL@example.edu';draft.basics.showEmail=false;

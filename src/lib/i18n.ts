@@ -1,4 +1,14 @@
 export const english: Record<string,string> = {
+ '联系邮箱由用户填写；登录验证不代表机构身份认证。':'Contact email is entered by the user. Sign-in verification does not verify institutional affiliation.',
+ '本机草稿':'Local draft','个人网页':'Personal website','学术简历':'Academic CV','选择模板，设置字体和纸张。':'Choose a template, fonts and paper size.','填写个人资料':'Enter your information',
+ '工作室':'Workspace','网页与简历':'Website and CV','使用说明':'Instructions','中文 / English':'Chinese / English',
+ '填写资料，制作个人网页和简历。':'Enter your information to make a website and CV.',
+ '选择模板、调整内容，再预览和下载。':'Choose a template, edit the content, then preview and download.',
+ '填写资料后，分别设置网页和简历。':'Enter your information, then set up the website and CV separately.',
+ '公开 demo · v0.5':'Public demo · v0.5',
+ '自由填写，多个关键词可用逗号分隔':'Use your own terms; separate multiple keywords with commas',
+ 'demo 支持多份资料、PDF 附件和个人主页发布。邮箱与短信验证需开通发送服务。机构邮箱认证与外部账号归属验证尚未接入。示例人物和成果用于演示。PDF 使用 XeLaTeX 编译；Word 与网页预览的分页可能不同。':'The demo supports profiles, PDF files and website publication. Email and SMS verification require delivery services. Institutional and external account verification are not implemented. Example people and records are fictional. PDF uses XeLaTeX; Word and browser previews may paginate differently.',
+
  '云端版 · v0.3':'Cloud edition · v0.3','编辑会自动保存到本机；登录后可主动保存云端草稿、发布个人主页。导出与发布只包含选择显示的内容。':'Edits are saved locally. Sign in to save cloud drafts and publish your website. Exports and published pages include selected content only.','v0.3 支持登录、云端草稿与个人主页发布。机构邮箱认证与外部账号归属验证尚未接入。示例人物和成果用于演示。PDF、Word 与 TeX 分页可能不同。':'v0.3 supports sign-in, cloud drafts and website publishing. Institutional email and external account ownership verification remain under development. Demo content is fictional. PDF, Word and TeX pagination may differ.',
 
  '工作台':'Overview','内容编辑':'Content editor','个人网站':'Personal website','简历工作室':'CV studio','导出中心':'Exports','个人学术网站':'Academic website','学术简历工作室':'Academic CV studio',
