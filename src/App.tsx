@@ -1,5 +1,6 @@
 import FileLibrary from './components/FileLibrary';
 import CloudPanel from './components/CloudPanel';
+import {refreshAnonymousDemo} from './lib/demo-migration';
 import { useEffect, useRef, useState, cloneElement, isValidElement, Children, type ReactNode } from 'react';
 import { ArrowDown, ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, ChevronRight, Code2, Download, ExternalLink, Eye, FileJson, FileText, Globe2, GraduationCap, GripVertical, HelpCircle, ImagePlus, LayoutDashboard, LayoutTemplate, Link2, Menu, Monitor, Plus, Search, Settings2, ShieldCheck, Smartphone, Sparkles, Trash2, Upload, UserRound, X } from 'lucide-react';
 import { cvCatalog, fontCatalog, chineseFonts, type CVTemplate, type FontId, type ChineseFontId } from './lib/catalog';
@@ -36,7 +37,7 @@ function initialDraft(storageKey: string, fallback:Profile=demoProfile) {
     if (raw) {
       try {
         return {
-          profile: parseBackup(JSON.parse(raw)),
+          profile: storageKey==='profileup-draft-v1'?refreshAnonymousDemo(parseBackup(JSON.parse(raw))):parseBackup(JSON.parse(raw)),
           error: ''
         };
       } catch {
@@ -89,13 +90,13 @@ function MiniTemplate({
   template: Template;
   cv?: boolean;
 }) {
-  return <div className={`mini-template ${template} ${cv ? 'cv-mini' : ''}`} aria-hidden="true"><div className="mini-nav"><i /><span /><span /></div><div className="mini-hero"><div className="mini-portrait">LC</div><div><b>Lin Chen</b><span>Researcher & educator</span><i /><i /></div></div><div className="mini-body"><strong>{template === 'research' ? 'Selected projects' : template === 'teaching' ? 'Teaching' : cv ? 'Education' : 'About me'}</strong><i /><i /><i className="short" /><strong>{template === 'research' ? 'Publications' : cv ? 'Publications' : 'Selected work'}</strong><div className="mini-entry"><em /><div><i /><i className="short" /></div></div><div className="mini-entry"><em /><div><i /><i className="short" /></div></div></div></div>;
+  return <div className={`mini-template ${template} ${cv ? 'cv-mini' : ''}`} aria-hidden="true"><div className="mini-nav"><i /><span /><span /></div><div className="mini-hero"><div className="mini-portrait"><UserRound size={18}/></div><div><b>{cv ? "Academic CV" : "Academic website"}</b><span>Layout preview</span><i /><i /></div></div><div className="mini-body"><strong>{template === 'research' ? 'Selected projects' : template === 'teaching' ? 'Teaching' : cv ? 'Education' : 'About me'}</strong><i /><i /><i className="short" /><strong>{template === 'research' ? 'Publications' : cv ? 'Publications' : 'Selected work'}</strong><div className="mini-entry"><em /><div><i /><i className="short" /></div></div><div className="mini-entry"><em /><div><i /><i className="short" /></div></div></div></div>;
 }
 export default function App({ account = null, cloudId, initialProfile, profileLabel, workspace, onCloudSaved, onInterfaceLanguageChange }: { account?: { id: string; name: string } | null; cloudId?:string; initialProfile?:Profile; profileLabel?:string; workspace?:ReactNode; onCloudSaved?:()=>void; onInterfaceLanguageChange?:(lang:'zh'|'en')=>void }) {
   const storageKey = account ? `profileup-draft-v1:${account.id}:${cloudId??'new'}` : 'profileup-draft-v1';
   const [loaded] = useState(() => initialDraft(storageKey,initialProfile)),
     [profile, setProfile] = useState<Profile>(loaded.profile);
-  const [page, setPage] = useState<Page>(() => ['home', 'editor', 'website', 'cv', 'exports'].includes(location.hash.slice(1)) ? location.hash.slice(1) as Page : 'website');
+  const [page, setPage] = useState<Page>(() => ['home', 'editor', 'website', 'cv', 'exports'].includes(location.hash.slice(1)) ? location.hash.slice(1) as Page : 'home');
   const [demoMode, setDemoMode] = useState(false),
     [cvFilter, setCVFilter] = useState<'all' | 'Word' | 'TeX'>('all');
   const uiLanguage = profile.settings.interfaceLanguage,
@@ -177,6 +178,10 @@ export default function App({ account = null, cloudId, initialProfile, profileLa
     [editLang]: value
   });
   const displayName = localized(profile.basics.name, profile.settings.language) || 'Your name';
+  async function copyDemoLink(){
+    if(['localhost','127.0.0.1','[::1]'].includes(location.hostname)){setToast(tr('本地地址无法供他人访问，请使用线上 demo。'));return;}
+    try{await navigator.clipboard.writeText(new URL('/',location.href).href);setToast(tr('试用链接已复制，可直接发给他人。'));}catch{setToast(tr('复制失败，请从浏览器地址栏复制网站地址。'));}
+  }
   const html = page === 'cv' ? renderCV(cvProfile) : renderWebsite(profile);
   const runExport = async (kind: 'website' | 'pdf' | 'tex' | 'docx' | 'json') => {
     if (busy) return;
@@ -263,10 +268,10 @@ export default function App({ account = null, cloudId, initialProfile, profileLa
           p.settings.latinFont = preset.font;
           p.settings.chineseFont = preset.chineseFont;
 
-        })}>{tr('应用推荐字体')} <ArrowRight size={13} /></button></div><div className="demo-toggle"><div><strong>{tr('预览内容')}</strong><span>{tr('示例为同一份虚构资料，便于比较版式，不会覆盖你的内容。')}</span></div><div className="segmented"><button className={!demoMode ? 'active' : ''} onClick={() => setDemoMode(false)}>{tr('我的内容')}</button><button className={demoMode ? 'active' : ''} onClick={() => setDemoMode(true)}>{tr('版式示例')}</button></div></div>{demoMode && <p className="demo-notice">{tr('当前显示版式示例；此页面的 PDF / Word / TeX 导出也将使用示例内容。')}</p>}</div>}
+        })}>{tr('应用推荐字体')} <ArrowRight size={13} /></button></div><div className="demo-toggle"><div><strong>{tr('预览内容')}</strong><span>{tr('使用字段占位展示排版，不包含真实人物或学术成果。')}</span></div><div className="segmented"><button className={!demoMode ? 'active' : ''} onClick={() => setDemoMode(false)}>{tr('我的内容')}</button><button className={demoMode ? 'active' : ''} onClick={() => setDemoMode(true)}>{tr('版式示例')}</button></div></div>{demoMode && <p className="demo-notice">{tr('当前显示版式示例；此页面的 PDF / Word / TeX 导出也将使用示例内容。')}</p>}</div>}
     <div className="section-heading preview-heading"><h2>{tr("调整与预览")}<span>02 / 03</span></h2><span className="live-dot">{tr("实时更新")}</span></div>
     <div className="builder-grid"><aside className="customize-panel"><div className="panel-title"><Settings2 size={16} /><h3>{output === 'website' ? tr("网站设置") : tr("简历设置")}</h3></div><div className="settings-content">
-      {output === 'website' && <><Field label={tr("网站标题")}><input value={profile.settings.siteTitle} onChange={e => settings('siteTitle', e.target.value)} placeholder="Your name · Academic Website" /></Field><Field label={tr("网址名称")} hint={tr("用作导出文件夹名，支持英文、数字与连字符")}><div className="slug-field"><Globe2 size={13} /><input aria-label={tr("网址名称")} value={profile.settings.slug} onChange={e => settings('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'my-website')} /></div></Field></>}
+      {output === 'website' && <><Field label={tr("网站标题")}><input value={profile.settings.siteTitle} onChange={e => settings('siteTitle', e.target.value)} placeholder="Academic website" /></Field><Field label={tr("网址名称")} hint={tr("用于个人主页地址和导出文件夹名；支持英文、数字与连字符")}><div className="slug-field"><Globe2 size={13} /><input aria-label={tr("网址名称")} value={profile.settings.slug} onChange={e => settings('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'my-website')} /></div></Field></>}
       <Field label={tr("内容语言")}><div className="segmented"><button className={profile.settings.language === 'zh' ? 'active' : ''} onClick={() => settings('language', 'zh')}>{tr("中文")}</button><button className={profile.settings.language === 'en' ? 'active' : ''} onClick={() => settings('language', 'en')}>English</button></div></Field>
       <Field label={tr('英文字体')}><select aria-label={tr('英文字体')} value={profile.settings.latinFont} onChange={e => settings('latinFont', e.target.value as FontId)}>{Object.entries(fontCatalog).map(([id, font]) => <option key={id} value={id}>{font.name}</option>)}</select></Field>
       <Field label={tr('中文字体')}><select aria-label={tr('中文字体')} value={profile.settings.chineseFont} onChange={e => settings('chineseFont', e.target.value as ChineseFontId)}>{Object.entries(chineseFonts).map(([id, font]) => <option key={id} value={id}>{font.name}</option>)}</select></Field>
@@ -462,7 +467,7 @@ export default function App({ account = null, cloudId, initialProfile, profileLa
             })}><option value="course">{tr("课程")}</option><option value="notes">{tr("笔记 / 讲义")}</option><option value="tutorial">{tr("教程")}</option><option value="video">{tr("授课视频")}</option></select></Field>}</div></article>)}{key === 'links' && <p className="editor-note"><Link2 size={15} />{tr("链接为用户填写，当前版本未验证账号归属。导出只启用 HTTP / HTTPS 链接。")}</p>}</>;
   };
   return <div className="app-shell"><input ref={importInput} type="file" accept=".json,application/json" className="hidden" onChange={e => importBackup(e.target.files?.[0])} /><input ref={photoInput} type="file" accept="image/jpeg,image/png" className="hidden" onChange={e => uploadPhoto(e.target.files?.[0])} />{sideOpen && <button className="sidebar-scrim" aria-label={tr("关闭导航")} onClick={() => setSideOpen(false)} />}
-    <aside className={`sidebar ${sideOpen ? 'open' : ''}`}><button className="brand" onClick={() => go('home')}><span className="brand-icon"><ArrowUpRight size={24} /></span><span>Profile<span className="brand-up">Up</span><i /></span></button><div className="workspace-label">{tr("工作室")}</div><nav aria-label={tr("主导航")}>{navigation.map(n => <button key={n.id} className={page === n.id ? 'active' : ''} onClick={() => go(n.id)}><n.icon size={18} /><span>{tr(n.name)}</span>{page === n.id && <span className="nav-indicator" />}</button>)}</nav><div className="sidebar-guide"><div className="guide-icon"><BookOpen size={19} /></div><h3>{tr("网页与简历")}<br />{tr("使用说明")}</h3><p>{tr("个人主页 · 学术履历")}<br />{tr("中文 / English")}</p><button onClick={() => setHelp(true)}>{tr("查看使用指南")}<ArrowUpRight size={14} /></button></div><div className="sidebar-bottom"><a href="/wasmtex/index.html" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#717171"}}>TeX · Open-source notices</a><button onClick={() => setHelp(true)}><HelpCircle size={17} />{tr("帮助与使用指南")}</button><div className="workspace-user"><div className="user-avatar">{displayName.slice(0, 1).toUpperCase()}</div><div><strong>{tr("个人工作空间")}</strong><span>{tr("公开 demo · v0.5")}</span></div><ShieldCheck size={15} /></div></div></aside>
+    <aside className={`sidebar ${sideOpen ? 'open' : ''}`}><button className="brand" onClick={() => go('home')}><span className="brand-icon"><ArrowUpRight size={24} /></span><span>Profile<span className="brand-up">Up</span><i /></span></button><div className="workspace-label">{tr("工作室")}</div><nav aria-label={tr("主导航")}>{navigation.map(n => <button key={n.id} className={page === n.id ? 'active' : ''} onClick={() => go(n.id)}><n.icon size={18} /><span>{tr(n.name)}</span>{page === n.id && <span className="nav-indicator" />}</button>)}</nav><div className="sidebar-guide"><div className="guide-icon"><BookOpen size={19} /></div><h3>{tr("网页与简历")}<br />{tr("使用说明")}</h3><p>{tr("个人主页 · 学术履历")}<br />{tr("中文 / English")}</p><button onClick={() => setHelp(true)}>{tr("查看使用指南")}<ArrowUpRight size={14} /></button></div><div className="sidebar-bottom"><a href="/wasmtex/index.html" target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"#717171"}}>TeX · Open-source notices</a><button onClick={() => setHelp(true)}><HelpCircle size={17} />{tr("帮助与使用指南")}</button><div className="workspace-user"><div className="user-avatar">{displayName.slice(0, 1).toUpperCase()}</div><div><strong>{tr("个人工作空间")}</strong><span>{tr("公开 demo")}</span></div><ShieldCheck size={15} /></div></div></aside>
     <div className="workspace"><header className="topbar"><div className="breadcrumb"><button className="mobile-menu" aria-label={tr("打开导航")} onClick={() => setSideOpen(true)}><Menu size={20} /></button><span>{tr("工作空间")}</span><ChevronRight size={13} /><strong>{tr(navigation.find(n => n.id === page)?.name ?? '')}</strong></div><div className="topbar-right"><select className="interface-language" aria-label={tr("Interface language / 界面语言")} value={uiLanguage} onChange={e => {settings('interfaceLanguage', e.target.value as 'zh' | 'en');onInterfaceLanguageChange?.(e.target.value as 'zh'|'en');}}><option value="zh">{tr("中文")}</option><option value="en">English</option></select><span className={`save-status ${saved ? 'saved' : ''}`}><span />{saved ? tr("已保存到此浏览器") : tr("保存中…")}</span><button className="icon-button" aria-label={tr("使用指南")} onClick={() => setHelp(true)}><HelpCircle size={18} /></button><div className="topbar-avatar">{displayName.slice(0, 1).toUpperCase()}</div></div></header>
     <main className="main-content">{storageError && <div className="warning-banner">{storageError}<button aria-label={tr("关闭提示")} onClick={() => setStorageError('')}><X size={14} /></button></div>}
       {account && localStorage.getItem('profileup-draft-v1') && <button className="text-button" onClick={()=>{try { const old=parseBackup(JSON.parse(localStorage.getItem('profileup-draft-v1')!)); setProfile(old);setToast('已导入本机离线草稿，请检查后保存到云端。'); } catch {setToast('本机草稿无法读取，请使用 JSON 备份导入。');}}}>导入本机离线草稿</button>}
@@ -471,22 +476,22 @@ export default function App({ account = null, cloudId, initialProfile, profileLa
       {cloudId && <FileLibrary key={cloudId} profileId={cloudId} selected={profile.websiteFiles} onSelect={ids=>update(p=>{p.websiteFiles=ids;})} english={uiLanguage==='en'} />}
       {compileProgress && <p className="tex-progress" role="status">{compileProgress}</p>}
       {page === 'website' && builder('website')}{page === 'cv' && builder('cv')}
-      {page === 'home' && <><div className="home-hero"><div><p className="eyebrow">PROFILE UP · DEMO</p><h1>{tr("个人网站与")}<br />{tr("学术简历。")}</h1><p>{tr("填写资料，制作个人网页和简历。")}<br />{tr("选择模板、调整内容，再预览和下载。")}</p><div className="home-actions"><button className="button primary" onClick={() => go('website')}>{tr("搭建个人网站")}<ArrowRight size={16} /></button><button className="button secondary" onClick={() => go('cv')}>{tr("制作学术简历")}</button></div></div><div className="hero-composition"><div className="hero-window"><div className="window-bar"><i /><i /><i /><span>your-name / website</span></div><MiniTemplate template="classic" /></div><div className="hero-cv"><MiniTemplate template="teaching" cv /></div><span className="hero-note">Website / Curriculum vitae</span></div></div><div className="section-heading"><h2>{tr("从这里开始")}</h2><span className="subtle">{tr("当前为可编辑的示例内容，可替换为你的信息")}</span></div><div className="start-grid">{[{
+      {page === 'home' && <><div className="home-hero"><div><p className="eyebrow">PROFILE UP · DEMO</p><h1>{tr("个人网站与")}<br />{tr("学术简历。")}</h1><p>{tr("填写资料，制作个人网页和简历。")}<br />{tr("选择模板、调整内容，再预览和下载。")}</p><div className="home-actions"><button className="button primary" onClick={() => go('website')}>{tr("搭建个人网站")}<ArrowRight size={16} /></button><button className="button secondary" onClick={() => go('cv')}>{tr("制作学术简历")}</button><button className="button secondary" onClick={copyDemoLink}><Link2 size={15}/>{tr("分享试用链接")}</button></div><p className="home-demo-note">{tr("示例只展示字段与排版。无需注册即可试用；注册后可保存资料与附件。")}</p></div><div className="hero-composition"><div className="hero-window"><div className="window-bar"><i /><i /><i /><span>your-name / website</span></div><MiniTemplate template="classic" /></div><div className="hero-cv"><MiniTemplate template="teaching" cv /></div><span className="hero-note">Website / Curriculum vitae</span></div></div><div className="section-heading"><h2>{tr("从这里开始")}</h2><span className="subtle">{tr("先填写资料，再选择模板；注册后可保存到云端。")}</span></div><div className="start-grid">{[{
               icon: FileText,
               title: tr("填写个人资料"),
-              desc: tr("填写基本信息、经历与成果。"),
+              desc: tr("填写中英文信息，按需添加经历与成果。"),
               action: tr("编辑内容"),
               target: 'editor'
             }, {
               icon: Globe2,
               title: tr("个人网页"),
-              desc: tr("选模板，调整模块，实时预览。"),
+              desc: tr("选择模板和显示内容，预览后发布或下载。"),
               action: tr("搭建网站"),
               target: 'website'
             }, {
               icon: GraduationCap,
               title: tr("学术简历"),
-              desc: tr("选择模板，设置字体和纸张。"),
+              desc: tr("选择版式和字体，下载 PDF、Word 或 TeX。"),
               action: tr("制作简历"),
               target: 'cv'
             }].map(x => <button className="start-card" key={x.target} onClick={() => go(x.target as Page)}><x.icon size={22} /><h3>{x.title}</h3><p>{x.desc}</p><span>{x.action}<ArrowRight size={15} /></span></button>)}</div><div className="local-info"><ShieldCheck size={20} /><div><strong>{tr("本机草稿")}</strong><p>{tr("编辑会自动保存到本机；登录后可主动保存云端草稿、发布个人主页。导出与发布只包含选择显示的内容。")}</p></div><button className="text-button" onClick={() => runExport('json')}>{tr("备份内容")}<ArrowUpRight size={14} /></button></div></>}
@@ -547,7 +552,7 @@ export default function App({ account = null, cloudId, initialProfile, profileLa
               setProfile(confirm === 'empty' ? emptyProfile() : structuredClone(demoProfile));
               setConfirm(null);
               setToast(tr("内容已更新。"));
-            }}>{tr("确认替换")}</button></div></div> : <div className="modal-content"><p className="help-intro">{tr("填写资料后，分别设置网页和简历。")}</p><ol><li><strong>{tr("编辑内容")}</strong><p>{tr("替换示例信息，按组块填写经历、成果和链接；分别编辑中文与英文。")}</p></li><li><strong>{tr("挑选模板")}</strong><p>{tr("在个人网站和简历工作室选择风格，设置模块顺序与公开范围。")}</p></li><li><strong>{tr("预览并下载")}</strong><p>{tr("导出静态网站、PDF、TeX 源项目；完整 JSON 备份可以再次导入。")}</p></li></ol><div className="help-limit"><ShieldCheck size={17} /><p>{tr("demo 支持多份资料、PDF 附件和个人主页发布。邮箱与短信验证需开通发送服务。机构邮箱认证与外部账号归属验证尚未接入。示例人物和成果用于演示。PDF 使用 XeLaTeX 编译；Word 与网页预览的分页可能不同。")}</p></div><button className="button primary" onClick={() => {
+            }}>{tr("确认替换")}</button></div></div> : <div className="modal-content"><p className="help-intro">{tr("填写资料后，分别设置网页和简历。")}</p><ol><li><strong>{tr("编辑内容")}</strong><p>{tr("替换示例信息，按组块填写经历、成果和链接；分别编辑中文与英文。")}</p></li><li><strong>{tr("挑选模板")}</strong><p>{tr("在个人网站和简历工作室选择风格，设置模块顺序与公开范围。")}</p></li><li><strong>{tr("预览并下载")}</strong><p>{tr("导出静态网站、PDF、TeX 源项目；完整 JSON 备份可以再次导入。")}</p></li><li><strong>{tr("保存与发布")}</strong><p>{tr("注册后新建资料，上传附件并保存到云端。确认显示内容后，可发布个人主页。")}</p></li></ol><div className="help-limit"><ShieldCheck size={17} /><p>{tr("演示版使用邮箱或手机号加密码注册，无需验证码。修改后请点击“保存到云端”。网页发布只包含选择显示的内容；PDF、Word 与网页预览的分页可能不同。")}</p></div><button className="button primary" onClick={() => {
             setHelp(false);
             go('editor');
           }}>{tr("开始填写我的内容")}<ArrowRight size={15} /></button></div>}</section></div>}

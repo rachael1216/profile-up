@@ -2,7 +2,7 @@
 
 个人学术网站与简历生成系统
 
-[demo 部署与域名](docs/demo-deployment.md) · [English](README.md) · [开发说明](docs/development.md) · [TeX 实现与来源](docs/tex-runtime.md)
+[在线 demo（临时地址）](https://profile-up-studio.beigemelon7.chatgpt.site/) · [部署与域名](docs/demo-deployment.md) · [English](README.md) · [开发说明](docs/development.md) · [TeX 实现与来源](docs/tex-runtime.md)
 
 ## 概述
 
@@ -51,7 +51,7 @@ npm run verify:tex
 
 当前版本为研究原型。每个账号最多 30 份资料、100 MB PDF；每份资料最多 50 个附件，单文件不超过 10 MB。草稿请求不超过 900 KB，照片在浏览器中压缩。视频以外部链接保存。演示版支持邮箱或手机号加密码注册、登录并保留云端资料，暂不验证登录标识归属，也暂不提供密码找回。Supabase 项目已连接；真实邮箱与短信验证码的发送服务尚未开通。已移除 ChatGPT 登录。具体需要所有者完成的步骤见 [开通说明](docs/activation.zh-CN.md)。机构邮箱认证、外部账号归属验证、自动论文导入、自定义域名和协同编辑仍待实现。
 
-测试覆盖资料校验、输出过滤、TeX 转义、文档导出、多 profile、账号隔离、附件权限、发布与撤下。它们属于软件功能验证；尚未开展用户研究，也未报告可用性或简历质量的 benchmark 结果。示例人物及成果均为虚构。
+测试覆盖资料校验、输出过滤、TeX 转义、文档导出、多 profile、账号隔离、附件权限、发布与撤下。它们属于软件功能验证；尚未开展用户研究，也未报告可用性或简历质量的 benchmark 结果。示例采用中性的字段占位，不代表真实人物或学术成果。
 
 ## 许可
 

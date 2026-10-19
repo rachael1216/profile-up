@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "websiteFiles": [],
+  "fieldIds": [],
+  "basics": {
+    "name": {
+      "zh": "陈林",
+      "en": "Lin Chen"
+    },
+    "title": {
+      "zh": "博士研究生",
+      "en": "Doctoral researcher"
+    },
+    "institution": {
+      "zh": "示例大学",
+      "en": "Example University"
+    },
+    "department": {
+      "zh": "示例学院",
+      "en": "Example department"
+    },
+    "location": {
+      "zh": "中国 · 杭州",
+      "en": "Hangzhou, China"
+    },
+    "biography": {
+      "zh": "此处填写个人简介，包括当前单位、研究工作或教学经历。",
+      "en": "Add a short biography with your current affiliation, research or teaching experience."
+    },
+    "statement": {
+      "zh": "此处填写研究计划或研究陈述，可在网页与简历中分别选择是否展示。",
+      "en": "Describe your research here. Choose separately whether to include this section on your website and CV."
+    },
+    "email": "lin.chen@example.edu",
+    "phone": "",
+    "aliases": "Lin Chen; L. Chen; 陈林",
+    "interests": {
+      "zh": "研究主题一, 研究主题二",
+      "en": "Research topic A, Research topic B"
+    },
+    "skills": {
+      "zh": "数据分析, 文献整理, 学术写作",
+      "en": "Data analysis, Literature review, Academic writing"
+    },
+    "photo": "",
+    "showEmail": true,
+    "showPhone": false
+  },
+  "links": [
+    {
+      "id": "link-1",
+      "label": "Google Scholar",
+      "url": "https://scholar.google.com/",
+      "visible": true
+    },
+    {
+      "id": "link-2",
+      "label": "GitHub",
+      "url": "https://github.com/",
+      "visible": true
+    },
+    {
+      "id": "link-3",
+      "label": "ORCID",
+      "url": "https://orcid.org/",
+      "visible": true
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "institution": {
+        "zh": "示例大学",
+        "en": "Example University"
+      },
+      "degree": {
+        "zh": "博士研究生",
+        "en": "Ph.D. candidate"
+      },
+      "department": {
+        "zh": "示例学院",
+        "en": "Example department"
+      },
+      "period": "2023 – Present",
+      "visible": true
+    },
+    {
+      "id": "edu-2",
+      "institution": {
+        "zh": "示例理工学院",
+        "en": "Example Institute of Technology"
+      },
+      "degree": {
+        "zh": "学士",
+        "en": "Bachelor’s degree"
+      },
+      "department": {
+        "zh": "",
+        "en": ""
+      },
+      "period": "2019 – 2023",
+      "visible": true
+    }
+  ],
+  "positions": [
+    {
+      "id": "pos-1",
+      "institution": {
+        "zh": "示例研究团队",
+        "en": "Example research group"
+      },
+      "title": {
+        "zh": "研究助理",
+        "en": "Research Assistant"
+      },
+      "period": "2023 – Present",
+      "visible": true
+    }
+  ],
+  "publications": [
+    {
+      "id": "pub-1",
+      "title": {
+        "zh": "论文题目一（示例）",
+        "en": "Example publication A (Demo)"
+      },
+      "authors": "Lin Chen, Alex Lee, Morgan Taylor",
+      "venue": "Illustrative research manuscript",
+      "year": "2026",
+      "url": "",
+      "status": "preprint",
+      "visible": true
+    },
+    {
+      "id": "pub-2",
+      "title": {
+        "zh": "论文题目二（示例）",
+        "en": "Example publication B (Demo)"
+      },
+      "authors": "Lin Chen, Morgan Taylor",
+      "venue": "Illustrative research manuscript",
+      "year": "2025",
+      "url": "",
+      "status": "preprint",
+      "visible": true
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": {
+        "zh": "Open Learning Lab",
+        "en": "Open Learning Lab"
+      },
+      "description": {
+        "zh": "一个用于探索交互式学习体验的开放项目。",
+        "en": "An open project exploring interactive learning experiences."
+      },
+      "period": "2025 – Present",
+      "url": "",
+      "visible": true
+    }
+  ],
+  "awards": [
+    {
+      "id": "award-1",
+      "title": {
+        "zh": "研究生学术奖学金（示例）",
+        "en": "Graduate Research Scholarship (Demo)"
+      },
+      "organization": {
+        "zh": "示例大学",
+        "en": "Example University"
+      },
+      "year": "2025",
+      "visible": true
+    }
+  ],
+  "teaching": [
+    {
+      "id": "course-1",
+      "title": {
+        "zh": "交互设计入门",
+        "en": "Introduction to Interaction Design"
+      },
+      "description": {
+        "zh": "开放课程笔记、阅读材料与实践练习。",
+        "en": "Open course notes, readings, and hands-on exercises."
+      },
+      "period": "2026 Spring",
+      "url": "",
+      "kind": "course",
+      "visible": true
+    }
+  ],
+  "news": [
+    {
+      "id": "news-1",
+      "title": {
+        "zh": "开始分享交互设计课程笔记。",
+        "en": "Sharing my interaction design course notes."
+      },
+      "date": "2026-09-12",
+      "url": "",
+      "visible": true
+    }
+  ],
+  "team": [
+    {
+      "id": "person-1",
+      "name": {
+        "zh": "示例合作者",
+        "en": "Example Collaborator"
+      },
+      "role": {
+        "zh": "研究合作伙伴",
+        "en": "Research collaborator"
+      },
+      "url": "",
+      "visible": true
+    }
+  ],
+  "settings": {
+    "siteTitle": "Lin Chen · Academic Website",
+    "slug": "lin-chen",
+    "language": "en",
+    "interfaceLanguage": "zh",
+    "websiteTemplate": "classic",
+    "cvTemplate": "classic",
+    "latinFont": "termes",
+    "chineseFont": "serif",
+    "fontSize": 11,
+    "lineSpacing": 1.45,
+    "accent": "ink",
+    "paper": "a4",
+    "showPhoto": true,
+    "websiteSections": [
+      {
+        "id": "about",
+        "enabled": true
+      },
+      {
+        "id": "education",
+        "enabled": true
+      },
+      {
+        "id": "positions",
+        "enabled": false
+      },
+      {
+        "id": "publications",
+        "enabled": true
+      },
+      {
+        "id": "projects",
+        "enabled": true
+      },
+      {
+        "id": "awards",
+        "enabled": true
+      },
+      {
+        "id": "teaching",
+        "enabled": true
+      },
+      {
+        "id": "news",
+        "enabled": true
+      },
+      {
+        "id": "team",
+        "enabled": false
+      },
+      {
+        "id": "skills",
+        "enabled": false
+      }
+    ],
+    "cvSections": [
+      {
+        "id": "education",
+        "enabled": true
+      },
+      {
+        "id": "positions",
+        "enabled": true
+      },
+      {
+        "id": "publications",
+        "enabled": true
+      },
+      {
+        "id": "projects",
+        "enabled": true
+      },
+      {
+        "id": "awards",
+        "enabled": true
+      },
+      {
+        "id": "teaching",
+        "enabled": true
+      },
+      {
+        "id": "skills",
+        "enabled": true
+      }
+    ]
+  }
+}

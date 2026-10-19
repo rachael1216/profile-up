@@ -4,6 +4,9 @@ import { readFile, mkdir } from 'node:fs/promises';
 
 test('website template changes, edits persist, and output matches the editor', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', {name:/个人网站与/})).toBeVisible();
+  await expect(page.getByText('Lin Chen',{exact:false})).toHaveCount(0);
+  await page.getByRole('button',{name:'搭建个人网站',exact:true}).click();
   await expect(page.getByRole('heading', { name: '个人学术网站' })).toBeVisible();
   await page.getByRole('button', { name: /Structured/ }).click();
   await expect(page.frameLocator('iframe').locator('body')).toHaveClass('research');
@@ -18,7 +21,7 @@ test('website template changes, edits persist, and output matches the editor', a
   await expect(page.frameLocator('iframe').getByRole('heading', { name: 'Ada Example', exact: true })).toBeVisible();
 });
 test('website ZIP excludes hidden publications', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#website');
   await page.getByRole('switch', { name: '学术发表网站显示' }).click();
   const event = page.waitForEvent('download');
   await page.getByRole('button', { name: '导出网站', exact: false }).click();
@@ -27,7 +30,7 @@ test('website ZIP excludes hidden publications', async ({ page }) => {
   const html = await zip.file('index.html')!.async('string');
   expect(html).not.toContain('Example publication A');
   expect(html).not.toContain('PRIVATE');
-  expect(html).toContain('Lin Chen');
+  expect(html).toContain('Name');
 });
 test('PDF and complete TeX exports work for Chinese and English', async ({ page }) => {
   await page.goto('/#cv');
@@ -44,7 +47,7 @@ test('PDF and complete TeX exports work for Chinese and English', async ({ page 
   await tex.saveAs('test-results/export-audit/tex-source.zip');
   const zip = await JSZip.loadAsync(await readFile((await tex.path())!));
   for (const filename of ['main.tex', 'publications.bib', 'fonts/NotoSerifSC-Regular.ttf', 'fonts/OFL.txt', 'README.txt']) expect(zip.file(filename)).not.toBeNull();
-  expect(await zip.file('main.tex')!.async('string')).toContain('陈林');
+  expect(await zip.file('main.tex')!.async('string')).toContain('姓名');
   const docxEvent = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Word 文件', exact: true }).click();
   await (await docxEvent).saveAs('test-results/export-audit/chinese-cv.docx');
@@ -54,10 +57,10 @@ test('PDF and complete TeX exports work for Chinese and English', async ({ page 
   const en = await enEvent; await en.saveAs('test-results/export-audit/english-cv.pdf');
 });
 test('all templates render and the app reflows on mobile', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#website');
   for (const template of ['Classic', 'Structured', 'Editorial']) {
     await page.getByRole('button', { name: new RegExp(template.replace('&', '\\&')) }).click();
-    await expect(page.frameLocator('iframe').getByRole('heading', { name: 'Lin Chen', exact: true })).toBeVisible();
+    await expect(page.frameLocator('iframe').getByRole('heading', { name: 'Name', exact: true })).toBeVisible();
   }
   await page.screenshot({ path: 'test-results/website-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -90,7 +93,7 @@ test('layout demos preserve drafts and bilingual interface and Word export work'
   const download=await event; await mkdir('test-results/export-audit',{recursive:true});
   await download.saveAs('test-results/export-audit/academic-cv.docx');
   const zip=await JSZip.loadAsync(await readFile((await download.path())!));
-  expect(await zip.file('word/document.xml')!.async('string')).toContain('Lin Chen');
+  expect(await zip.file('word/document.xml')!.async('string')).toContain('Name');
   expect(await zip.file('word/styles.xml')!.async('string')).toContain('EB Garamond');
   await page.getByLabel('Interface language / 界面语言').selectOption('en');
   await expect(page.getByRole('heading',{name:'Academic CV studio',exact:true})).toBeVisible();

@@ -10,7 +10,7 @@ test('hidden contacts, entries, and disabled modules are removed from every publ
   p.basics.email = 'PRIVATE_EMAIL@example.edu'; p.basics.showEmail = false;
   p.basics.aliases = 'PRIVATE_ALIAS';
   p.publications[0].title = { zh: 'PRIVATE_PAPER', en: 'PRIVATE_PAPER' }; p.publications[0].visible = false;
-  p.team[0].name = { zh: 'PRIVATE_COLLABORATOR', en: 'PRIVATE_COLLABORATOR' };
+  p.team = [{id:'private-member',name:{zh:'PRIVATE_COLLABORATOR',en:'PRIVATE_COLLABORATOR'},role:{zh:'',en:''},url:'',visible:true}];
   for (const html of [renderWebsite(p), renderCV(p), renderTex(p)]) {
     for (const secret of ['PRIVATE_PHONE', 'PRIVATE_EMAIL', 'PRIVATE_ALIAS', 'PRIVATE_PAPER', 'PRIVATE_COLLABORATOR']) assert.ok(!html.includes(secret), secret);
   }
